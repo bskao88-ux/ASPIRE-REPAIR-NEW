@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>設施報修系統</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans TC', sans-serif; background: #f5f6f8; color: #1a1a1a; min-height: 100vh; }
+
+  /* ── Navigation ── */
+  .nav { background: #0F2D4E; padding: 0; display: flex; align-items: stretch; }
+  .nav-brand { color: white; font-size: 15px; font-weight: 600; padding: 14px 16px; letter-spacing: 0.02em; }
+  .nav-tabs { display: flex; margin-left: auto; }
+  .nav-tab { color: rgba(255,255,255,0.65); font-size: 13px; padding: 0 16px; display: flex; align-items: center; gap: 6px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.15s; }
+  .nav-tab:hover { color: white; background: rgba(255,255,255,0.07); }
+  .nav-tab.active { color: white; border-bottom-color: #F7941D; }
+
+  /* ── Pages ── */
+  .page { display: none; padding: 20px 16px; max-width: 680px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* ── Form ── */
+  .card { background: white; border-radius: 12px; border: 0.5px solid #e0e0e0; overflow: hidden; margin-bottom: 16px; }
+  .card-header { background: #0F2D4E; color: white; padding: 12px 16px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .card-body { padding: 16px; }
+  .section-label { font-size: 11px; font-weight: 600; color: #0D7377; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 12px; }
+  .field { margin-bottom: 14px; }
+  .field label { font-size: 12px; color: #666; display: block; margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; color: #1a1a1a; background: white; outline: none; transition: border 0.15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: #0D7377; }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field .hint { font-size: 11px; color: #999; margin-top: 4px; }
+  .divider { height: 1px; background: #f0f0f0; margin: 16px 0; }
+  .btn-primary { width: 100%; padding: 12px; background: #0D7377; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+  .btn-primary:hover { background: #0b5e61; }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+
+  /* ── 密碼鎖 ── */
+  .lock-overlay { display:flex; align-items:center; justify-content:center; min-height:260px; }
+  .lock-box { background:white; border-radius:14px; border:0.5px solid #e0e0e0; padding:28px 24px; width:100%; max-width:320px; text-align:center; }
+  .lock-icon { font-size:32px; margin-bottom:12px; }
+  .lock-title { font-size:15px; font-weight:600; color:#0F2D4E; margin-bottom:6px; }
+  .lock-sub { font-size:12px; color:#999; margin-bottom:18px; }
+  .lock-input { width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:8px; font-size:16px; text-align:center; letter-spacing:0.15em; outline:none; color:#1a1a1a; }
+  .lock-input:focus { border-color:#0D7377; }
+  .lock-btn { width:100%; margin-top:12px; padding:11px; background:#0F2D4E; color:white; border:none; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; }
+  .lock-btn:hover { background:#0b2240; }
+  .lock-err { font-size:12px; color:#c0392b; margin-top:8px; min-height:18px; }
+  .logout-btn { font-size:12px; color:rgba(255,255,255,0.55); cursor:pointer; padding:0 12px; display:flex; align-items:center; }
+  .logout-btn:hover { color:white; }
+
+  /* ── Toast ── */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: white; padding: 10px 20px; border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 100; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  /* ── API config banner ── */
+  .config-banner { background: #FAEEDA; border: 1px solid #F7941D; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; font-size: 13px; color: #633806; display: flex; align-items: flex-start; gap: 8px; }
+  .config-banner input { flex: 1; padding: 6px 10px; border: 1px solid #F7941D; border-radius: 6px; font-size: 13px; background: white; color: #1a1a1a; margin-top: 6px; outline: none; }
+  .config-banner .save-url { margin-top: 6px; padding: 6px 14px; background: #F7941D; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+
+  /* ── Management ── */
+  .filter-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .filter-btn { flex: 1; padding: 8px 4px; border: 1px solid #ddd; border-radius: 8px; background: white; font-size: 12px; cursor: pointer; color: #666; transition: all 0.15s; }
+  .filter-btn.active { background: #0F2D4E; color: white; border-color: #0F2D4E; }
+  .case-card { background: white; border: 0.5px solid #e0e0e0; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+  .case-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .case-id { font-size: 11px; color: #999; }
+  .case-title { font-size: 14px; font-weight: 500; color: #1a1a1a; margin: 2px 0 4px; }
+  .case-meta { font-size: 12px; color: #888; margin-bottom: 8px; }
+  .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+  .badge.pending { background: #FAEEDA; color: #854F0B; }
+  .badge.done { background: #EAF3DE; color: #3B6D11; }
+  .case-desc { font-size: 13px; color: #555; background: #f8f8f8; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; }
+  .repair-area label { font-size: 12px; color: #666; display: block; margin-bottom: 5px; }
+  .repair-area textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; min-height: 60px; resize: vertical; outline: none; }
+  .repair-area textarea:focus { border-color: #0D7377; }
+  .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+  .btn-save { flex: 1; padding: 9px; background: #0D7377; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .btn-close-case { flex: 1; padding: 9px; background: #F7941D; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .empty-state { text-align: center; color: #aaa; padding: 40px 0; font-size: 14px; }
+
+  /* ── Dashboard ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: white; border-radius: 10px; border: 0.5px solid #e0e0e0; padding: 14px; text-align: center; }
+  .stat-num { font-size: 26px; font-weight: 600; }
+  .stat-num.navy { color: #0F2D4E; }
+  .stat-num.orange { color: #F7941D; }
+  .stat-num.teal { color: #0D7377; }
+  .stat-num.gray { color: #888; }
+  .stat-label { font-size: 12px; color: #888; margin-top: 3px; }
+  .chart-bar-wrap { background: white; border-radius: 10px; border: 0.5px solid #e0e0e0; padding: 16px; margin-bottom: 16px; }
+  .chart-title { font-size: 13px; font-weight: 500; margin-bottom: 14px; color: #1a1a1a; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; }
+  .bar-label { width: 50px; color: #666; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; background: #f0f0f0; border-radius: 4px; height: 16px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; min-width: 4px; }
+  .bar-val { width: 28px; color: #444; font-weight: 500; }
+  .recent-list { background: white; border-radius: 10px; border: 0.5px solid #e0e0e0; padding: 16px; }
+  .recent-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid #f0f0f0; font-size: 13px; }
+  .recent-item:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">📋 設施報修系統</div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchPage('form')">報修申請</div>
+    <div class="nav-tab" onclick="requireAuth('mgr')">修繕管理</div>
+    <div class="nav-tab" onclick="requireAuth('dash')">後台統計</div>
+  </div>
+  <div class="logout-btn" id="logoutBtn" style="display:none" onclick="logout()">登出</div>
+</nav>
+
+<!-- ── 密碼鎖頁面 ── -->
+<div id="page-lock" class="page" style="display:none;">
+  <div class="lock-overlay">
+    <div class="lock-box">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-title">後台管理區</div>
+      <div class="lock-sub">請輸入管理密碼才能進入</div>
+      <input class="lock-input" type="password" id="pwInput" placeholder="••••••" maxlength="20"
+        onkeydown="if(event.key==='Enter') checkPassword()" />
+      <button class="lock-btn" onclick="checkPassword()">進入</button>
+      <div class="lock-err" id="pwErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── API 設定 Banner ── -->
+
+<!-- ══ 報修表單 ══ -->
+<div id="page-form" class="page active">
+  <div class="card">
+    <div class="card-header">🔧 設施報修申請</div>
+    <div class="card-body">
+      <div class="section-label">基本資料</div>
+      <div class="field"><label>申請單位 *</label><input type="text" id="f-unit" placeholder="例：研發一部" /></div>
+      <div class="field"><label>申請人姓名 *</label><input type="text" id="f-name" placeholder="請輸入姓名" /></div>
+      <div class="field"><label>報修日期 *</label><input type="date" id="f-date" /></div>
+      <div class="divider"></div>
+      <div class="section-label">報修地點</div>
+      <div class="field">
+        <label>區域 *</label>
+        <select id="f-area">
+          <option value="">請選擇區域</option>
+          <option value="會館">1. 會館</option>
+          <option value="雅舍">2. 雅舍</option>
+          <option value="研究園">3. 研究園</option>
+          <option value="智尊">4. 智尊</option>
+          <option value="其他">5. 其他</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>詳細位置</label>
+        <input type="text" id="f-location" placeholder="例：502、3F走廊、大廳入口旁…" oninput="showNormPreview()" />
+        <div class="hint">直接輸入房號即可，如「502」或「502號」系統會自動標準化</div>
+        <div id="normPreview" style="display:none; margin-top:5px; font-size:12px; color:#0D7377; background:#E1F5EE; border-radius:6px; padding:5px 10px;">
+          將儲存為：<span id="normValue"></span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-label">故障情形</div>
+      <div class="field">
+        <label>故障狀況描述 *</label>
+        <textarea id="f-desc" placeholder="請詳細描述故障狀況…"></textarea>
+      </div>
+      <button class="btn-primary" id="submitBtn" onclick="submitForm()">送出報修申請</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 修繕管理 ══ -->
+<div id="page-mgr" class="page">
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="filterCases('all', this)">全部</button>
+    <button class="filter-btn" onclick="filterCases('待處理', this)">待處理</button>
+    <button class="filter-btn" onclick="filterCases('已結案', this)">已結案</button>
+  </div>
+  <div id="caseList"><div class="empty-state">載入中…</div></div>
+</div>
+
+<!-- ══ 後台統計 ══ -->
+<div id="page-dash" class="page">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num navy" id="d-total">—</div><div class="stat-label">總案件數</div></div>
+    <div class="stat-card"><div class="stat-num orange" id="d-pending">—</div><div class="stat-label">待處理</div></div>
+    <div class="stat-card"><div class="stat-num teal" id="d-done">—</div><div class="stat-label">已結案</div></div>
+    <div class="stat-card"><div class="stat-num gray" id="d-rate">—</div><div class="stat-label">結案率</div></div>
+  </div>
+  <div class="chart-bar-wrap">
+    <div class="chart-title">各區域案件數</div>
+    <div id="areaChart"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
+  </div>
+  <div class="chart-bar-wrap">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div class="chart-title" style="margin-bottom:0;">位置病歷表 <span style="font-size:11px;color:#999;font-weight:400;">（依報修次數排序）</span></div>
+      <select id="areaFilter" onchange="renderDashboard()" style="font-size:12px; padding:4px 8px; border:1px solid #ddd; border-radius:6px; color:#444; background:white;">
+        <option value="all">全部區域</option>
+        <option value="會館">會館</option>
+        <option value="雅舍">雅舍</option>
+        <option value="研究園">研究園</option>
+        <option value="智尊">智尊</option>
+        <option value="其他">其他</option>
+      </select>
+    </div>
+    <div id="locationTable"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
+  </div>
+  <div class="recent-list">
+    <div class="chart-title">最近案件</div>
+    <div id="recentList"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let API_URL = 'https://script.google.com/macros/s/AKfycbz14jOXEvXQ2XS6w_KVHPwQyFi4wOCk8Jfh4sCK2HULaV4LJwe59EpWyU8EJXktbQ/exec';
+let allCases = [];
+let currentFilter = 'all';
+let pendingPage = null;
+
+// ── 密碼設定（可自行修改） ──
+const ADMIN_PASSWORD = 'repair2026';
+
+// ── 初始化 ──
+window.onload = () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f-date').value = today;
+};
+
+// ── 權限控管 ──
+function requireAuth(id) {
+  if (sessionStorage.getItem('adminAuth') === 'yes') {
+    switchPage(id);
+  } else {
+    pendingPage = id;
+    showLock();
+  }
+}
+
+function showLock() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const lockEl = document.getElementById('page-lock');
+  lockEl.style.display = 'block';
+  lockEl.classList.add('active');
+  document.getElementById('pwInput').value = '';
+  document.getElementById('pwErr').textContent = '';
+  setTimeout(() => document.getElementById('pwInput').focus(), 100);
+}
+
+function checkPassword() {
+  const pw = document.getElementById('pwInput').value;
+  if (pw === ADMIN_PASSWORD) {
+    sessionStorage.setItem('adminAuth', 'yes');
+    document.getElementById('page-lock').style.display = 'none';
+    document.getElementById('logoutBtn').style.display = 'flex';
+    switchPage(pendingPage || 'mgr');
+    pendingPage = null;
+  } else {
+    document.getElementById('pwErr').textContent = '密碼錯誤，請再試一次';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('adminAuth');
+  document.getElementById('logoutBtn').style.display = 'none';
+  switchPage('form');
+  showToast('已登出後台');
+}
+
+// ── 頁面切換 ──
+function switchPage(id) {
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); });
+  document.getElementById('page-lock').style.display = 'none';
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab')[['form','mgr','dash'].indexOf(id)].classList.add('active');
+  if (id === 'mgr' || id === 'dash') loadCases();
+}
+
+// ── 送出報修 ──
+async function submitForm() {
+  if (!API_URL) { showToast('請先設定 API 網址'); return; }
+  const unit = document.getElementById('f-unit').value.trim();
+  const name = document.getElementById('f-name').value.trim();
+  const date = document.getElementById('f-date').value;
+  const area = document.getElementById('f-area').value;
+  const desc = document.getElementById('f-desc').value.trim();
+  if (!unit || !name || !date || !area || !desc) { showToast('請填寫所有必填欄位（*）'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = '送出中…';
+
+  try {
+    const params = new URLSearchParams({ action: 'submit', unit, name, date, area,
+      location: normalizeLocation(document.getElementById('f-location').value.trim()), description: desc });
+    const res = await fetch(API_URL + '?' + params);
+    const data = await res.json();
+    if (data.success) {
+      showToast('✓ ' + data.message);
+      document.getElementById('f-unit').value = '';
+      document.getElementById('f-name').value = '';
+      document.getElementById('f-area').value = '';
+      document.getElementById('f-location').value = '';
+      document.getElementById('f-desc').value = '';
+    } else {
+      showToast('錯誤：' + data.message);
+    }
+  } catch (e) {
+    showToast('連線失敗，請檢查網路或 API 網址');
+  }
+
+  btn.disabled = false; btn.textContent = '送出報修申請';
+}
+
+// ── 載入案件 ──
+async function loadCases() {
+  if (!API_URL) { document.getElementById('caseList').innerHTML = '<div class="empty-state">請先設定 API 網址</div>'; return; }
+  try {
+    const res = await fetch(API_URL + '?action=getAll');
+    const data = await res.json();
+    if (data.success) {
+      allCases = data.cases.reverse();
+      renderCases();
+      renderDashboard();
+    }
+  } catch (e) {
+    document.getElementById('caseList').innerHTML = '<div class="empty-state">載入失敗，請檢查連線</div>';
+  }
+}
+
+// ── 顯示案件列表 ──
+function renderCases() {
+  const list = document.getElementById('caseList');
+  const filtered = currentFilter === 'all' ? allCases : allCases.filter(c => c.status === currentFilter);
+  if (filtered.length === 0) { list.innerHTML = '<div class="empty-state">目前沒有案件</div>'; return; }
+
+  list.innerHTML = filtered.map(c => `
+    <div class="case-card">
+      <div class="case-top">
+        <div>
+          <div class="case-id">${c.caseId}</div>
+          <div class="case-title">${c.area} · ${c.location || '—'}</div>
+          <div class="case-meta">${c.unit} · ${c.name} · ${c.date}</div>
+        </div>
+        <span class="badge ${c.status === '待處理' ? 'pending' : 'done'}">${c.status}</span>
+      </div>
+      <div class="case-desc">${c.description}</div>
+      ${c.status === '待處理' ? `
+        <div class="repair-area">
+          <label>維修記錄</label>
+          <textarea id="note-${c.rowIndex}" placeholder="填寫處理情形…">${c.repairNote || ''}</textarea>
+          <div class="btn-row">
+            <button class="btn-save" onclick="updateCase(${c.rowIndex})">儲存進度</button>
+            <button class="btn-close-case" onclick="closeCase(${c.rowIndex})">結案</button>
+          </div>
+        </div>` : c.repairNote ? `<div style="font-size:12px;color:#888;margin-top:4px;">維修紀錄：${c.repairNote}</div>` : ''}
+    </div>`).join('');
+}
+
+function filterCases(status, btn) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCases();
+}
+
+// ── 更新維修記錄 ──
+async function updateCase(rowIndex) {
+  const note = document.getElementById('note-' + rowIndex).value;
+  await callApi({ action: 'update', rowIndex, repairNote: note });
+  showToast('✓ 維修記錄已儲存');
+}
+
+async function closeCase(rowIndex) {
+  const note = document.getElementById('note-' + rowIndex).value;
+  await callApi({ action: 'close', rowIndex, repairNote: note });
+  showToast('✓ 案件已結案');
+  loadCases();
+}
+
+async function callApi(params) {
+  const qs = new URLSearchParams(params);
+  const res = await fetch(API_URL + '?' + qs);
+  return await res.json();
+}
+
+// ── 位置標準化 ──
+function normalizeLocation(raw) {
+  if (!raw || !raw.trim()) return '';
+  let s = raw.trim();
+  // 全形數字 → 半形
+  s = s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+  // 移除常見後綴（號房、號室、號、室、房、間），保留數字+字母+中文地點描述
+  s = s.replace(/(\d+)\s*[號号]\s*[房室間]?/g, '$1');
+  s = s.replace(/(\d+)\s*[室房間]/g, '$1');
+  // 整理多餘空白
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+function showNormPreview() {
+  const raw = document.getElementById('f-location').value;
+  const norm = normalizeLocation(raw);
+  const preview = document.getElementById('normPreview');
+  const normVal = document.getElementById('normValue');
+  if (norm && norm !== raw.trim()) {
+    normVal.textContent = norm;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+// ── 後台統計 ──
+function renderDashboard() {
+  const total = allCases.length;
+  const pending = allCases.filter(c => c.status === '待處理').length;
+  const done = allCases.filter(c => c.status === '已結案').length;
+  const rate = total > 0 ? Math.round(done / total * 100) + '%' : '—';
+
+  document.getElementById('d-total').textContent = total;
+  document.getElementById('d-pending').textContent = pending;
+  document.getElementById('d-done').textContent = done;
+  document.getElementById('d-rate').textContent = rate;
+
+  // 區域統計
+  const areaCounts = {};
+  allCases.forEach(c => { areaCounts[c.area] = (areaCounts[c.area] || 0) + 1; });
+  const maxCount = Math.max(...Object.values(areaCounts), 1);
+  const colors = { '會館': '#0F2D4E', '雅舍': '#0D7377', '研究園': '#F7941D', '智尊': '#7F77DD', '其他': '#888' };
+
+  document.getElementById('areaChart').innerHTML = Object.entries(areaCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([area, count]) => `
+      <div class="bar-row">
+        <div class="bar-label">${area}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/maxCount*100)}%; background:${colors[area]||'#888'};"></div></div>
+        <div class="bar-val">${count}</div>
+      </div>`).join('') || '<div class="empty-state" style="padding:20px 0;">暫無資料</div>';
+
+  // 位置病歷表
+  const areaFilter = document.getElementById('areaFilter').value;
+  const filtered = areaFilter === 'all' ? allCases : allCases.filter(c => c.area === areaFilter);
+  const locMap = {};
+  filtered.forEach(c => {
+    const normLoc = normalizeLocation(c.location) || '（未填位置）';
+    const key = c.area + '|' + normLoc;
+    if (!locMap[key]) locMap[key] = { area: c.area, loc: normLoc, total: 0, pending: 0, done: 0, cases: [] };
+    locMap[key].total++;
+    if (c.status === '待處理') locMap[key].pending++;
+    else locMap[key].done++;
+    locMap[key].cases.push(c);
+  });
+
+  const locEntries = Object.values(locMap).sort((a, b) => b.total - a.total);
+  const maxLoc = Math.max(...locEntries.map(e => e.total), 1);
+
+  document.getElementById('locationTable').innerHTML = locEntries.length ? locEntries.map((e, i) => `
+    <div style="margin-bottom:12px; padding-bottom:12px; border-bottom:0.5px solid #f0f0f0;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:11px; font-weight:600; color:#aaa; min-width:18px;">#${i+1}</span>
+          <div>
+            <span style="font-size:13px; font-weight:500; color:#1a1a1a;">${e.loc}</span>
+            <span style="font-size:11px; color:#999; margin-left:6px;">${areaFilter==='all' ? e.area : ''}</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+          ${e.pending ? `<span style="font-size:11px; padding:2px 7px; border-radius:20px; background:#FAEEDA; color:#854F0B;">${e.pending} 待處理</span>` : ''}
+          ${e.done ? `<span style="font-size:11px; padding:2px 7px; border-radius:20px; background:#EAF3DE; color:#3B6D11;">${e.done} 已結案</span>` : ''}
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="flex:1; background:#f0f0f0; border-radius:4px; height:10px; overflow:hidden;">
+          <div style="height:100%; border-radius:4px; background:${colors[e.area]||'#888'}; width:${Math.round(e.total/maxLoc*100)}%;"></div>
+        </div>
+        <span style="font-size:12px; font-weight:500; color:#444; min-width:30px; text-align:right;">${e.total} 次</span>
+      </div>
+    </div>`).join('') : '<div class="empty-state" style="padding:20px 0;">暫無資料</div>';
+
+  // 最近案件
+  document.getElementById('recentList').innerHTML = allCases.slice(0, 8).map(c => `
+    <div class="recent-item">
+      <div>
+        <div style="font-weight:500; color:#1a1a1a;">${c.area} · ${normalizeLocation(c.location) || '—'}</div>
+        <div style="font-size:11px; color:#999; margin-top:2px;">${c.unit} · ${c.date}</div>
+      </div>
+      <span class="badge ${c.status === '待處理' ? 'pending' : 'done'}">${c.status}</span>
+    </div>`).join('') || '<div class="empty-state">暫無資料</div>';
+}
+
+// ── Toast 通知 ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
