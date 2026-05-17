@@ -262,8 +262,7 @@
 <!-- ══ 案件查詢（公開）══ -->
 <div id="page-query" class="page">
   <div class="filter-row">
-    <button class="filter-btn active" onclick="filterQuery('all',this)">全部</button>
-    <button class="filter-btn" onclick="filterQuery('待處理',this)">待處理</button>
+    <button class="filter-btn active" onclick="filterQuery('待處理',this)">待處理</button>
     <button class="filter-btn" onclick="filterQuery('已結案',this)">已結案</button>
   </div>
   <select id="q-area-filter" onchange="renderQuery()" class="dash-select" style="width:100%; margin-bottom:12px;">
@@ -353,7 +352,7 @@ const PAGE_SIZE = 20;
 
 let allCases = [];
 let currentFilter = '待處理';
-let currentQueryFilter = 'all';
+let currentQueryFilter = '待處理';
 let currentTimeFilter = 'month';
 let currentAreaDashFilter = 'all';
 let mgrPage = 1;
