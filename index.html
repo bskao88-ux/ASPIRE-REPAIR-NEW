@@ -238,9 +238,9 @@
         <label>位置類型 *</label>
         <div class="loc-type-row">
           <button class="loc-type-btn" onclick="setLocType('room',this)">🚪 客房</button>
-          <button class="loc-type-btn" onclick="setLocType('facility',this)">🍽️ 設施場所</button>
-          <button class="loc-type-btn" onclick="setLocType('public',this)">🏢 公共區域</button>
-          <button class="loc-type-btn" onclick="setLocType('other',this)">📍 其他</button>
+          <button class="loc-type-btn" onclick="setLocType('restaurant',this)">🍽️ 餐廳</button>
+          <button class="loc-type-btn" onclick="setLocType('facility',this)">🏛️ 設施</button>
+          <button class="loc-type-btn" onclick="setLocType('other',this)">📍 公共區域／其他</button>
         </div>
         <div id="loc-input-wrap" style="display:none; margin-top:2px;">
           <input type="text" id="f-location" placeholder="" oninput="showNormPreview()" />
@@ -334,6 +334,10 @@
     <div style="margin-top:14px;" id="locationTable"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
   </div>
   <div class="chart-wrap">
+    <div class="chart-title">位置類型統計</div>
+    <div id="locTypeChart"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
+  </div>
+  <div class="chart-wrap">
     <div class="chart-title">案件類型統計</div>
     <div id="caseTypeChart"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
   </div>
@@ -383,9 +387,9 @@ function setLocType(type, btn) {
   document.getElementById('normPreview').style.display = 'none';
   input.value = '';
   if (type==='room') { input.placeholder='請輸入房號，例：502'; hint.textContent='輸入數字即可，系統會自動標準化'; }
-  else if (type==='facility') { input.placeholder='例：餐廳、休閒部、會議室…'; hint.textContent=''; }
-  else if (type==='public') { input.placeholder='例：走廊、大廳、停車場、室外…'; hint.textContent=''; }
-  else { input.placeholder='請描述位置'; hint.textContent=''; }
+  else if (type==='restaurant') { input.placeholder='例：中餐廳、咖啡廳、宴會廳…'; hint.textContent=''; }
+  else if (type==='facility') { input.placeholder='例：休閒部、教室、會議室、交誼廳…'; hint.textContent=''; }
+  else { input.placeholder='例：廁所、走廊、停車場、小熊廣場…'; hint.textContent=''; }
 }
 
 // ── 位置標準化 ──
@@ -484,7 +488,7 @@ async function submitForm() {
   const btn = document.getElementById('submitBtn');
   btn.disabled=true; btn.textContent='送出中…';
   try {
-    const locTypeLabel = {room:'客房',facility:'設施場所',public:'公共區域',other:'其他'}[locType]||'';
+    const locTypeLabel = {room:'客房',restaurant:'餐廳',facility:'設施',other:'公共區域／其他'}[locType]||'';
     const location = normalizeLocation(document.getElementById('f-location').value.trim());
     const params = new URLSearchParams({ action:'submit', unit, name, datetime, area, locationType:locTypeLabel, location, description:desc });
     const res = await fetch(API_URL+'?'+params);
@@ -545,6 +549,12 @@ function renderCases() {
       </div>
       <div class="case-desc">${c.description}</div>
       <div class="mgr-field">
+        <div class="mgr-label">更正位置類型 <span class="opt-tag">選填</span></div>
+        <div class="flag-row" id="ltype-${c.rowIndex}">
+          ${['客房','餐廳','設施','公共區域／其他'].map(f=>`<button class="flag-btn${(c.correctedLocType||c.locationType)===f?' active-flag':''}" onclick="toggleLocType(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
+        </div>
+      </div>
+      <div class="mgr-field">
         <div class="mgr-label">
           標準化位置 <span class="opt-tag">選填</span>
           <span class="tooltip-wrap"><span class="tooltip-icon">ⓘ</span><span class="tooltip-box">填入後病歷表將優先以此統計，可隨時修改</span></span>
@@ -580,6 +590,20 @@ function renderCases() {
   }).join('');
 
   renderPagination('mgrPagination', mgrPage, totalPages, p=>{mgrPage=p;renderCases();});
+}
+
+function toggleLocType(rowIndex, type, btn) {
+  const btns = document.getElementById('ltype-'+rowIndex).querySelectorAll('.flag-btn');
+  const wasActive = btn.classList.contains('active-flag');
+  btns.forEach(b=>b.classList.remove('active-flag'));
+  if (!wasActive) btn.classList.add('active-flag');
+}
+
+function getSelectedLocType(rowIndex) {
+  const el = document.getElementById('ltype-'+rowIndex);
+  if (!el) return '';
+  const active = el.querySelector('.active-flag');
+  return active ? active.textContent : '';
 }
 
 function toggleCaseType(rowIndex, type, btn) {
@@ -624,7 +648,8 @@ async function updateCase(rowIndex) {
   const flag = getSelectedFlag(rowIndex);
   const caseType = getSelectedCaseType(rowIndex);
   if (!caseType) { showToast('請選擇案件類型'); return; }
-  await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType});
+  const correctedLocType = getSelectedLocType(rowIndex);
+  await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType});
   showToast('✓ 已儲存'); loadCases();
 }
 async function closeCase(rowIndex) {
@@ -633,7 +658,8 @@ async function closeCase(rowIndex) {
   const flag = getSelectedFlag(rowIndex);
   const caseType = getSelectedCaseType(rowIndex);
   if (!caseType) { showToast('請選擇案件類型'); return; }
-  await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType});
+  const correctedLocType = getSelectedLocType(rowIndex);
+  await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType});
   showToast('✓ 案件已結案'); loadCases();
 }
 async function reopenCase(rowIndex) {
@@ -804,6 +830,21 @@ function renderDashboard() {
       </div>
     </div>`;
   }).join(''):'<div class="empty-state" style="padding:20px 0;">暫無資料</div>';
+
+  const locTypeColors = {'客房':'#E8761A','餐廳':'#3B82F6','設施':'#8B5CF6','公共區域／其他':'#aaa'};
+  const locTypeCounts = {};
+  cases.forEach(c=>{
+    const lt = c.correctedLocType || c.locationType || '';
+    if (lt) locTypeCounts[lt]=(locTypeCounts[lt]||0)+1;
+  });
+  const maxLT = Math.max(...Object.values(locTypeCounts),1);
+  document.getElementById('locTypeChart').innerHTML = Object.keys(locTypeCounts).length ?
+    Object.entries(locTypeCounts).sort((a,b)=>b[1]-a[1]).map(([type,count])=>`
+      <div class="bar-row">
+        <div class="bar-label" style="width:80px;">${type}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/maxLT*100)}%;background:${locTypeColors[type]||'#aaa'};"></div></div>
+        <div class="bar-val">${count}</div>
+      </div>`).join('') : '<div class="empty-state" style="padding:20px 0;">暫無資料</div>';
 
   const typeColors = {'空調':'#3B82F6','機電':'#F59E0B','建物':'#10B981','其他':'#aaa'};
   const typeCounts = {};
