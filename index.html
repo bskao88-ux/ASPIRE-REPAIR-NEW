@@ -116,9 +116,9 @@
 
   /* ── Flag buttons ── */
   .flag-row { display:flex; gap:6px; flex-wrap:wrap; }
-  .flag-btn { padding:5px 12px; border:1.5px solid #e8e8e8; border-radius:20px; background:white; font-size:12px; cursor:pointer; color:#aaa; transition:all 0.15s; font-family:inherit; }
-  .flag-btn.active-flag { background:#f0f0f0; color:#666; border-color:#ccc; font-weight:600; }
-  .flag-btn:hover:not(.active-flag) { border-color:#ccc; color:#888; }
+  .flag-btn { padding:5px 12px; border:1.5px solid #ccc; border-radius:20px; background:white; font-size:12px; cursor:pointer; color:#555; transition:all 0.15s; font-family:inherit; font-weight:500; }
+  .flag-btn.active-flag { background:#E8761A; color:white; border-color:#E8761A; font-weight:600; }
+  .flag-btn:hover:not(.active-flag) { border-color:#E8761A; color:#E8761A; }
 
   .btn-row { display:flex; gap:8px; margin-top:10px; }
   .btn-save { flex:1; padding:9px; background:#E8761A; color:white; border:none; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
@@ -549,6 +549,15 @@ function renderCases() {
       </div>
       <div class="case-desc">${c.description}</div>
       <div class="mgr-field">
+        <div class="mgr-label">案件類型 <span style="font-size:10px;color:#e05252;background:#fdecea;padding:1px 6px;border-radius:4px;">必填</span></div>
+        <div class="flag-row" id="ctype-${c.rowIndex}">
+          ${['空調','機電','建物','其他'].map(f=>`<button class="flag-btn${c.caseType&&c.caseType.startsWith(f)?' active-flag':''}" onclick="toggleCaseType(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
+        </div>
+        <input type="text" id="ctype-other-${c.rowIndex}" placeholder="請描述類型（選填）"
+          style="display:${c.caseType&&c.caseType.startsWith('其他')&&c.caseType.length>2?'block':'none'};margin-top:6px;width:100%;padding:7px 11px;border:1.5px solid #e8e8e8;border-radius:9px;font-size:13px;font-family:inherit;outline:none;"
+          value="${c.caseType&&c.caseType.startsWith('其他')?c.caseType.replace('其他：',''):''}">
+      </div>
+      <div class="mgr-field">
         <div class="mgr-label">更正位置類型 <span class="opt-tag">選填</span></div>
         <div class="flag-row" id="ltype-${c.rowIndex}">
           ${['客房','餐廳','設施','公共區域／其他'].map(f=>`<button class="flag-btn${(c.correctedLocType||c.locationType)===f?' active-flag':''}" onclick="toggleLocType(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
@@ -564,15 +573,6 @@ function renderCases() {
       <div class="mgr-field">
         <div class="mgr-label">維修記錄</div>
         <textarea id="note-${c.rowIndex}" placeholder="填寫處理情形…">${c.repairNote||''}</textarea>
-      </div>
-      <div class="mgr-field">
-        <div class="mgr-label">案件類型 <span style="font-size:10px;color:#e05252;background:#fdecea;padding:1px 6px;border-radius:4px;">必填</span></div>
-        <div class="flag-row" id="ctype-${c.rowIndex}">
-          ${['空調','機電','建物','其他'].map(f=>`<button class="flag-btn${c.caseType&&c.caseType.startsWith(f)?' active-flag':''}" onclick="toggleCaseType(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
-        </div>
-        <input type="text" id="ctype-other-${c.rowIndex}" placeholder="請描述類型（選填）"
-          style="display:${c.caseType&&c.caseType.startsWith('其他')&&c.caseType.length>2?'block':'none'};margin-top:6px;width:100%;padding:7px 11px;border:1.5px solid #e8e8e8;border-radius:9px;font-size:13px;font-family:inherit;outline:none;"
-          value="${c.caseType&&c.caseType.startsWith('其他')?c.caseType.replace('其他：',''):''}">
       </div>
       <div class="mgr-field">
         <div class="mgr-label">標記原因 <span class="opt-tag">選填，標記後不列入病歷表統計</span></div>
