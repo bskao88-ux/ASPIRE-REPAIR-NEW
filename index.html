@@ -657,14 +657,22 @@ function setTimeFilter(type, btn) {
   renderDashboard();
 }
 
+function parseDate(raw) {
+  if (!raw) return null;
+  const m1 = String(raw).match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  if (m1) return new Date(parseInt(m1[1]), parseInt(m1[2])-1, parseInt(m1[3]));
+  const d = new Date(raw);
+  return isNaN(d) ? null : d;
+}
+
 function getFilteredCases() {
   const now = new Date();
   const valid = allCases.filter(c=>!c.flagReason);
   if (currentTimeFilter==='all') return valid;
   return valid.filter(c=>{
     const raw = c.datetime||c.date||'';
-    const d = new Date(raw.replace(/\//g,'-'));
-    if (isNaN(d)) return true;
+    const d = parseDate(raw);
+    if (!d) return true;
     if (currentTimeFilter==='month') return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
     if (currentTimeFilter==='3month') return (now-d)<=90*24*60*60*1000;
     if (currentTimeFilter==='year') return d.getFullYear()===now.getFullYear();
