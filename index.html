@@ -378,7 +378,9 @@ function setLocType(type, btn) {
 
 // ── 位置標準化 ──
 function normalizeLocation(raw) {
-  if (!raw || !raw.trim()) return '';
+  if (!raw) return '';
+  raw = String(raw);
+  if (!raw.trim()) return '';
   let s = raw.trim();
   s = s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0));
   const cnMap = {'零':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
