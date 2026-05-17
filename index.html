@@ -262,9 +262,9 @@
 <!-- ══ 案件查詢（公開）══ -->
 <div id="page-query" class="page">
   <div style="position:relative;margin-bottom:10px;">
-    <input type="text" id="q-search" placeholder="🔍 搜尋單位、姓名、位置、故障描述…" oninput="renderQuery()"
-      style="width:100%;padding:10px 13px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:14px;font-family:inherit;outline:none;color:#1a1a1a;"
-      onfocus="this.style.borderColor='#E8761A'" onblur="this.style.borderColor='#e8e8e8'"/>
+    <input type="text" id="q-search" placeholder="🔍 搜尋單位、姓名、位置、故障描述…"
+      oninput="renderQuery()"
+      style="width:100%;padding:10px 13px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:14px;font-family:inherit;outline:none;color:#1a1a1a;transition:border 0.15s;" />
   </div>
   <div class="filter-row">
     <button class="filter-btn active" onclick="filterQuery('待處理',this)">待處理</button>
