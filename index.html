@@ -276,14 +276,14 @@
     <button class="filter-btn active" onclick="filterQuery('待處理',this)">待處理</button>
     <button class="filter-btn" onclick="filterQuery('已結案',this)">已結案</button>
   </div>
-  <select id="q-area-filter" onchange="renderQuery()" class="dash-select" style="width:100%; margin-bottom:12px;">
-    <option value="all">所有區域</option>
-    <option value="會館">會館</option>
-    <option value="雅舍">雅舍</option>
-    <option value="研究園">研究園</option>
-    <option value="智尊">智尊</option>
-    <option value="其他">其他</option>
-  </select>
+  <div class="filter-row" style="flex-wrap:wrap;gap:6px;" id="query-area-row">
+    <button class="filter-btn active" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('all',this)">全部</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('會館',this)">會館</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('雅舍',this)">雅舍</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('研究園',this)">研究園</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('智尊',this)">智尊</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('其他',this)">其他</button>
+  </div>
   <div id="queryList"><div class="empty-state">載入中…</div></div>
   <div id="queryPagination" class="pagination"></div>
 </div>
@@ -293,6 +293,14 @@
   <div class="filter-row">
     <button class="filter-btn active" onclick="filterCases('待處理',this)">待處理</button>
     <button class="filter-btn" onclick="filterCases('已結案',this)">已結案</button>
+  </div>
+  <div class="filter-row" style="flex-wrap:wrap;gap:6px;" id="mgr-area-row">
+    <button class="filter-btn active" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('all',this)">全部</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('會館',this)">會館</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('雅舍',this)">雅舍</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('研究園',this)">研究園</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('智尊',this)">智尊</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('其他',this)">其他</button>
   </div>
   <div id="caseList"><div class="empty-state">載入中…</div></div>
   <div id="mgrPagination" class="pagination"></div>
@@ -358,6 +366,8 @@ const PAGE_SIZE = 20;
 let allCases = [];
 let currentFilter = '待處理';
 let currentQueryFilter = '待處理';
+let currentMgrArea = 'all';
+let currentQueryArea = 'all';
 let currentTimeFilter = 'month';
 let currentAreaDashFilter = 'all';
 let mgrPage = 1;
@@ -537,6 +547,14 @@ async function loadCases() {
 }
 
 // ── 修繕管理 ──
+function filterMgrArea(area, btn) {
+  currentMgrArea = area;
+  mgrPage = 1;
+  document.querySelectorAll('#mgr-area-row .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCases();
+}
+
 function filterCases(status, btn) {
   currentFilter=status; mgrPage=1;
   document.querySelectorAll('#page-mgr .filter-btn').forEach(b=>b.classList.remove('active'));
@@ -545,7 +563,8 @@ function filterCases(status, btn) {
 
 function renderCases() {
   const list = document.getElementById('caseList');
-  const filtered = allCases.filter(c=>c.status===currentFilter);
+  let filtered = allCases.filter(c=>c.status===currentFilter);
+  if (currentMgrArea!=='all') filtered=filtered.filter(c=>c.area===currentMgrArea);
   if (!filtered.length) { list.innerHTML='<div class="empty-state">目前沒有案件</div>'; document.getElementById('mgrPagination').innerHTML=''; return; }
   const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
   if (mgrPage>totalPages) mgrPage=totalPages;
@@ -689,6 +708,14 @@ async function callApi(params) {
 }
 
 // ── 案件查詢（公開）──
+function filterQueryArea(area, btn) {
+  currentQueryArea = area;
+  queryPage = 1;
+  document.querySelectorAll('#query-area-row .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderQuery();
+}
+
 function filterQuery(status, btn) {
   currentQueryFilter=status; queryPage=1;
   document.querySelectorAll('#page-query .filter-btn').forEach(b=>b.classList.remove('active'));
@@ -697,11 +724,9 @@ function filterQuery(status, btn) {
 
 function renderQuery() {
   const list = document.getElementById('queryList');
-  const area = document.getElementById('q-area-filter').value;
-
   let filtered = allCases;
   if (currentQueryFilter!=='all') filtered=filtered.filter(c=>c.status===currentQueryFilter);
-  if (area!=='all') filtered=filtered.filter(c=>c.area===area);
+  if (currentQueryArea!=='all') filtered=filtered.filter(c=>c.area===currentQueryArea);
 
   if (!filtered.length) { list.innerHTML='<div class="empty-state">目前沒有案件</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
   const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
