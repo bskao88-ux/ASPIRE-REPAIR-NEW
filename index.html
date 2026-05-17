@@ -261,11 +261,6 @@
 
 <!-- ══ 案件查詢（公開）══ -->
 <div id="page-query" class="page">
-  <div style="position:relative;margin-bottom:10px;">
-    <input type="text" id="q-search" placeholder="🔍 搜尋單位、姓名、位置、故障描述…"
-      oninput="renderQuery()"
-      style="width:100%;padding:10px 13px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:14px;font-family:inherit;outline:none;color:#1a1a1a;transition:border 0.15s;" />
-  </div>
   <div class="filter-row">
     <button class="filter-btn active" onclick="filterQuery('待處理',this)">待處理</button>
     <button class="filter-btn" onclick="filterQuery('已結案',this)">已結案</button>
@@ -676,19 +671,11 @@ function filterQuery(status, btn) {
 function renderQuery() {
   const list = document.getElementById('queryList');
   const area = document.getElementById('q-area-filter').value;
-  const searchEl = document.getElementById('q-search');
-  const keyword = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
   let filtered = allCases;
   if (currentQueryFilter!=='all') filtered=filtered.filter(c=>c.status===currentQueryFilter);
   if (area!=='all') filtered=filtered.filter(c=>c.area===area);
-  if (keyword) filtered=filtered.filter(c=>
-    (c.unit||'').toLowerCase().includes(keyword)||
-    (c.name||'').toLowerCase().includes(keyword)||
-    (c.location||'').toLowerCase().includes(keyword)||
-    (c.normalizedLocation||'').toLowerCase().includes(keyword)||
-    (c.description||'').toLowerCase().includes(keyword)||
-    (c.area||'').toLowerCase().includes(keyword)
-  );
+
   if (!filtered.length) { list.innerHTML='<div class="empty-state">目前沒有案件</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
   const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
   if (queryPage>totalPages) queryPage=totalPages;
