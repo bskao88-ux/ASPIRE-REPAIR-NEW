@@ -261,6 +261,11 @@
 
 <!-- ══ 案件查詢（公開）══ -->
 <div id="page-query" class="page">
+  <div style="position:relative;margin-bottom:10px;">
+    <input type="text" id="q-search" placeholder="🔍 搜尋單位、姓名、位置、故障描述…" oninput="renderQuery()"
+      style="width:100%;padding:10px 13px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:14px;font-family:inherit;outline:none;color:#1a1a1a;"
+      onfocus="this.style.borderColor='#E8761A'" onblur="this.style.borderColor='#e8e8e8'"/>
+  </div>
   <div class="filter-row">
     <button class="filter-btn active" onclick="filterQuery('待處理',this)">待處理</button>
     <button class="filter-btn" onclick="filterQuery('已結案',this)">已結案</button>
@@ -531,7 +536,7 @@ function renderCases() {
     return `<div class="${cls}">
       <div class="case-top">
         <div>
-          <div class="case-id">${c.caseId} · ${c.datetime||c.date}</div>
+          <div class="case-id">${c.caseId} · ${formatDatetime(c.datetime||c.date)}</div>
           <div class="case-title">${c.area} · ${locDisplay}${c.locationType ? ' <span style="font-size:11px;background:#FEF0E3;color:#C05E0A;padding:2px 8px;border-radius:20px;font-weight:600;">'+c.locationType+'</span>' : ''}</div>
           <div class="case-meta">${c.unit} · ${c.name}</div>
         </div>
@@ -671,9 +676,19 @@ function filterQuery(status, btn) {
 function renderQuery() {
   const list = document.getElementById('queryList');
   const area = document.getElementById('q-area-filter').value;
+  const searchEl = document.getElementById('q-search');
+  const keyword = searchEl ? searchEl.value.trim().toLowerCase() : '';
   let filtered = allCases;
   if (currentQueryFilter!=='all') filtered=filtered.filter(c=>c.status===currentQueryFilter);
   if (area!=='all') filtered=filtered.filter(c=>c.area===area);
+  if (keyword) filtered=filtered.filter(c=>
+    (c.unit||'').toLowerCase().includes(keyword)||
+    (c.name||'').toLowerCase().includes(keyword)||
+    (c.location||'').toLowerCase().includes(keyword)||
+    (c.normalizedLocation||'').toLowerCase().includes(keyword)||
+    (c.description||'').toLowerCase().includes(keyword)||
+    (c.area||'').toLowerCase().includes(keyword)
+  );
   if (!filtered.length) { list.innerHTML='<div class="empty-state">目前沒有案件</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
   const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
   if (queryPage>totalPages) queryPage=totalPages;
@@ -684,7 +699,7 @@ function renderQuery() {
     return `<div class="pub-card${isFlagged?' is-flagged':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div>
-          <div class="case-id">${c.caseId} · ${c.datetime||c.date}</div>
+          <div class="case-id">${c.caseId} · ${formatDatetime(c.datetime||c.date)}</div>
           <div class="pub-title">${c.area} · ${locDisplay}${c.locationType ? ' <span style="font-size:11px;background:#FEF0E3;color:#C05E0A;padding:2px 8px;border-radius:20px;font-weight:600;">'+c.locationType+'</span>' : ''}</div>
           <div class="pub-meta">${c.unit} · ${c.name}</div>
         </div>
@@ -727,6 +742,28 @@ function setTimeFilter(type, btn) {
   btn.classList.add('active');
   document.getElementById('customRangeWrap').style.display = type==='custom'?'flex':'none';
   renderDashboard();
+}
+
+function formatDatetime(raw) {
+  if (!raw) return '';
+  const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  // Try to parse
+  const m = String(raw).match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if (m) {
+    const d = new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+    const day = weekdays[d.getDay()];
+    return `${m[1]}/${String(m[2]).padStart(2,'0')}/${String(m[3]).padStart(2,'0')} ${day}`;
+  }
+  // GMT string fallback
+  const d = new Date(raw);
+  if (!isNaN(d)) {
+    const y = d.getFullYear();
+    const mo = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    const day = weekdays[d.getDay()];
+    return `${y}/${mo}/${dd} ${day}`;
+  }
+  return raw;
 }
 
 function parseDate(raw) {
@@ -852,7 +889,7 @@ function renderDashboard() {
     <div class="recent-item">
       <div>
         <div style="font-weight:600;color:#1a1a1a;">${c.area} · ${c.normalizedLocation||normalizeLocation(c.location)||'—'}</div>
-        <div style="font-size:11px;color:#bbb;margin-top:2px;">${c.unit} · ${c.datetime||c.date}</div>
+        <div style="font-size:11px;color:#bbb;margin-top:2px;">${c.unit} · ${formatDatetime(c.datetime||c.date)}</div>
       </div>
       <span class="badge ${c.status==='待處理'?'pending':'done'}">${c.status}</span>
     </div>`).join('')||'<div class="empty-state">暫無資料</div>';
