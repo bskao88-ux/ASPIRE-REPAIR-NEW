@@ -714,22 +714,41 @@ function renderDashboard() {
   locCases.forEach(c=>{
     const loc=c.normalizedLocation||normalizeLocation(c.location)||'（未填位置）';
     const key=c.area+'|'+loc;
-    if(!locMap[key]) locMap[key]={area:c.area,loc,total:0,pending:0,done:0};
+    if(!locMap[key]) locMap[key]={area:c.area,loc,total:0,pending:0,done:0,cases:[]};
     locMap[key].total++; if(c.status==='待處理') locMap[key].pending++; else locMap[key].done++;
+    locMap[key].cases.push(c);
   });
   const locEntries=Object.values(locMap).sort((a,b)=>b.total-a.total);
   const maxL=Math.max(...locEntries.map(e=>e.total),1);
-  document.getElementById('locationTable').innerHTML=locEntries.length?locEntries.map((e,i)=>`
+  document.getElementById('locationTable').innerHTML=locEntries.length?locEntries.map((e,i)=>{
+    const entryId='loc-detail-'+i;
+    const caseRows=e.cases.map(c=>`
+      <div style="padding:8px 10px;border-bottom:1px solid #f5f0eb;last-child:border-none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <div style="font-size:11px;color:#bbb;">${c.caseId} · ${c.datetime||c.date}</div>
+          <span class="badge ${c.status==='待處理'?'pending':'done'}" style="font-size:10px;padding:2px 8px;">${c.status}</span>
+        </div>
+        <div style="font-size:13px;color:#333;margin-bottom:4px;">${c.description}</div>
+        ${c.repairNote?`<div style="font-size:12px;color:#888;font-style:italic;">📋 ${c.status==='已結案'?'結案紀錄':'處理進度'}：${c.repairNote}</div>`:`<div style="font-size:12px;color:#ccc;font-style:italic;">${c.status==='待處理'?'處理進度：（尚未填寫）':''}</div>`}
+      </div>`).join('');
+    return `
     <div class="loc-entry">
-      <div class="loc-top">
+      <div class="loc-top" onclick="toggleLocDetail('${entryId}')" style="cursor:pointer;">
         <div><span style="font-size:11px;font-weight:700;color:#ddd;margin-right:6px;">#${i+1}</span><span class="loc-name">${e.loc}</span>${areaF==='all'?`<span class="loc-area-tag">${e.area}</span>`:''}</div>
-        <div class="loc-badges">${e.pending?`<span class="lb-p">${e.pending} 待處理</span>`:''}${e.done?`<span class="lb-d">${e.done} 已結案</span>`:''}</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="loc-badges">${e.pending?`<span class="lb-p">${e.pending} 待處理</span>`:''}${e.done?`<span class="lb-d">${e.done} 已結案</span>`:''}</div>
+          <span id="arrow-${entryId}" style="font-size:12px;color:#ccc;transition:transform 0.2s;">▼</span>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-top:5px;">
         <div style="flex:1;background:#f2ede8;border-radius:5px;height:10px;overflow:hidden;"><div style="height:100%;border-radius:5px;background:${AREA_COLORS[e.area]||'#aaa'};width:${Math.round(e.total/maxL*100)}%;"></div></div>
         <span style="font-size:12px;font-weight:600;color:#444;min-width:30px;text-align:right;">${e.total} 次</span>
       </div>
-    </div>`).join(''):'<div class="empty-state" style="padding:20px 0;">暫無資料</div>';
+      <div id="${entryId}" style="display:none;margin-top:10px;background:#faf8f5;border-radius:8px;overflow:hidden;border:1px solid #f0ebe4;">
+        ${caseRows}
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty-state" style="padding:20px 0;">暫無資料</div>';
 
   document.getElementById('recentList').innerHTML=cases.slice(0,8).map(c=>`
     <div class="recent-item">
@@ -739,6 +758,14 @@ function renderDashboard() {
       </div>
       <span class="badge ${c.status==='待處理'?'pending':'done'}">${c.status}</span>
     </div>`).join('')||'<div class="empty-state">暫無資料</div>';
+}
+
+function toggleLocDetail(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById('arrow-'+id);
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 
 function showToast(msg) {
