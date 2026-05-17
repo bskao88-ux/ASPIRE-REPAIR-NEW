@@ -218,7 +218,18 @@
     <div class="card-header">🔧 設施報修申請</div>
     <div class="card-body">
       <div class="section-label">基本資料</div>
-      <div class="field"><label>申請單位 *</label><input type="text" id="f-unit" placeholder="例：房務部" /></div>
+      <div class="field">
+        <label>申請單位 *</label>
+        <div class="loc-type-row" style="flex-wrap:wrap;" id="unit-btn-row">
+          <button class="loc-type-btn" onclick="setUnit('房務部',this)">房務部</button>
+          <button class="loc-type-btn" onclick="setUnit('客房部',this)">客房部</button>
+          <button class="loc-type-btn" onclick="setUnit('休閒中心',this)">休閒中心</button>
+          <button class="loc-type-btn" onclick="setUnit('饗渴望',this)">饗渴望</button>
+          <button class="loc-type-btn" onclick="setUnit('會議組',this)">會議組</button>
+          <button class="loc-type-btn" onclick="setUnit('其他',this)">其他</button>
+        </div>
+        <input type="text" id="f-unit" placeholder="請輸入單位名稱" style="display:none;margin-top:8px;" />
+      </div>
       <div class="field"><label>申請人姓名 *</label><input type="text" id="f-name" placeholder="請輸入姓名" /></div>
       <div class="field"><label>報修日期</label><input type="text" id="f-date" readonly /></div>
       <div class="divider"></div>
@@ -366,6 +377,20 @@ window.onload = () => {
 };
 
 // ── 位置類型 ──
+function setUnit(unit, btn) {
+  document.querySelectorAll('#unit-btn-row .loc-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const input = document.getElementById('f-unit');
+  if (unit === '其他') {
+    input.style.display = 'block';
+    input.value = '';
+    input.focus();
+  } else {
+    input.style.display = 'none';
+    input.value = unit;
+  }
+}
+
 function setLocType(type, btn) {
   locType = type;
   document.querySelectorAll('.loc-type-btn').forEach(b => b.classList.remove('active'));
@@ -472,7 +497,8 @@ async function submitForm() {
   const name = document.getElementById('f-name').value.trim();
   const area = document.getElementById('f-area').value;
   const desc = document.getElementById('f-desc').value.trim();
-  if (!unit||!name||!area||!desc||!locType) { showToast('請填寫所有必填欄位（*）'); return; }
+  if (!unit) { showToast('請選擇申請單位'); return; }
+  if (!name||!area||!desc||!locType) { showToast('請填寫所有必填欄位（*）'); return; }
   const now = new Date();
   const datetime = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const btn = document.getElementById('submitBtn');
@@ -489,6 +515,7 @@ async function submitForm() {
       document.getElementById('loc-input-wrap').style.display='none';
       document.getElementById('normPreview').style.display='none';
       document.querySelectorAll('.loc-type-btn').forEach(b=>b.classList.remove('active'));
+      document.getElementById('f-unit').style.display='none';
       locType='';
     } else { showToast('錯誤：'+data.message); }
   } catch(e) { showToast('連線失敗，請檢查網路'); }
