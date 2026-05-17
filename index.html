@@ -557,10 +557,13 @@ function renderCases() {
         <textarea id="note-${c.rowIndex}" placeholder="填寫處理情形…">${c.repairNote||''}</textarea>
       </div>
       <div class="mgr-field">
-        <div class="mgr-label">案件類型 <span class="opt-tag">選填</span></div>
+        <div class="mgr-label">案件類型 <span style="font-size:10px;color:#e05252;background:#fdecea;padding:1px 6px;border-radius:4px;">必填</span></div>
         <div class="flag-row" id="ctype-${c.rowIndex}">
-          ${['空調','機電','建物','其他'].map(f=>`<button class="flag-btn${c.caseType===f?' active-flag':''}" onclick="toggleCaseType(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
+          ${['空調','機電','建物','其他'].map(f=>`<button class="flag-btn${c.caseType&&c.caseType.startsWith(f)?' active-flag':''}" onclick="toggleCaseType(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
         </div>
+        <input type="text" id="ctype-other-${c.rowIndex}" placeholder="請描述類型（選填）"
+          style="display:${c.caseType&&c.caseType.startsWith('其他')&&c.caseType.length>2?'block':'none'};margin-top:6px;width:100%;padding:7px 11px;border:1.5px solid #e8e8e8;border-radius:9px;font-size:13px;font-family:inherit;outline:none;"
+          value="${c.caseType&&c.caseType.startsWith('其他')?c.caseType.replace('其他：',''):''}">
       </div>
       <div class="mgr-field">
         <div class="mgr-label">標記原因 <span class="opt-tag">選填，標記後不列入病歷表統計</span></div>
@@ -582,16 +585,24 @@ function renderCases() {
 
 function toggleCaseType(rowIndex, type, btn) {
   const btns = document.getElementById('ctype-'+rowIndex).querySelectorAll('.flag-btn');
-  const wasActive = btn.classList.contains('active-flag');
   btns.forEach(b=>b.classList.remove('active-flag'));
-  if (!wasActive) btn.classList.add('active-flag');
+  btn.classList.add('active-flag');
+  const otherInput = document.getElementById('ctype-other-'+rowIndex);
+  if (otherInput) otherInput.style.display = type==='其他' ? 'block' : 'none';
 }
 
 function getSelectedCaseType(rowIndex) {
   const el = document.getElementById('ctype-'+rowIndex);
   if (!el) return '';
   const active = el.querySelector('.active-flag');
-  return active ? active.textContent : '';
+  if (!active) return '';
+  const type = active.textContent;
+  if (type === '其他') {
+    const otherInput = document.getElementById('ctype-other-'+rowIndex);
+    const otherVal = otherInput ? otherInput.value.trim() : '';
+    return otherVal ? '其他：' + otherVal : '其他';
+  }
+  return type;
 }
 
 function toggleFlag(rowIndex, reason, btn) {
@@ -613,6 +624,7 @@ async function updateCase(rowIndex) {
   const norm = document.getElementById('norm-'+rowIndex).value;
   const flag = getSelectedFlag(rowIndex);
   const caseType = getSelectedCaseType(rowIndex);
+  if (!caseType) { showToast('請選擇案件類型'); return; }
   await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType});
   showToast('✓ 已儲存'); loadCases();
 }
@@ -621,6 +633,7 @@ async function closeCase(rowIndex) {
   const norm = document.getElementById('norm-'+rowIndex).value;
   const flag = getSelectedFlag(rowIndex);
   const caseType = getSelectedCaseType(rowIndex);
+  if (!caseType) { showToast('請選擇案件類型'); return; }
   await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType});
   showToast('✓ 案件已結案'); loadCases();
 }
