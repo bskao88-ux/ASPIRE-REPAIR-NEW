@@ -187,7 +187,7 @@
 <body>
 
 <nav class="nav">
-  <div class="nav-brand">🌟 渴望會館</div>
+  <div class="nav-brand">🌟 渴望園區報修系統</div>
   <div class="nav-tabs">
     <div class="nav-tab active" onclick="switchPage('form')">報修申請</div>
     <div class="nav-tab" onclick="switchPage('query')">案件查詢</div>
@@ -297,6 +297,14 @@
     <button class="time-btn" onclick="setTimeFilter('all',this)">全部</button>
     <button class="time-btn" onclick="setTimeFilter('custom',this)">自訂</button>
   </div>
+  <div class="time-filter-row" style="margin-bottom:10px;">
+    <button class="time-btn active" onclick="setAreaDashFilter('all',this)">全部棟別</button>
+    <button class="time-btn" onclick="setAreaDashFilter('會館',this)">會館</button>
+    <button class="time-btn" onclick="setAreaDashFilter('雅舍',this)">雅舍</button>
+    <button class="time-btn" onclick="setAreaDashFilter('研究園',this)">研究園</button>
+    <button class="time-btn" onclick="setAreaDashFilter('智尊',this)">智尊</button>
+    <button class="time-btn" onclick="setAreaDashFilter('其他',this)">其他</button>
+  </div>
   <div id="customRangeWrap" class="custom-range" style="display:none;">
     <input type="date" id="dateFrom" onchange="renderDashboard()" />
     <span>至</span>
@@ -327,6 +335,10 @@
     <div style="margin-top:14px;" id="locationTable"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
   </div>
   <div class="chart-wrap">
+    <div class="chart-title">案件類型統計</div>
+    <div id="caseTypeChart"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
+  </div>
+  <div class="chart-wrap">
     <div class="chart-title">最近案件</div>
     <div id="recentList"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
   </div>
@@ -343,6 +355,7 @@ let allCases = [];
 let currentFilter = '待處理';
 let currentQueryFilter = 'all';
 let currentTimeFilter = 'month';
+let currentAreaDashFilter = 'all';
 let mgrPage = 1;
 let queryPage = 1;
 let locType = '';
@@ -526,7 +539,7 @@ function renderCases() {
       <div class="case-top">
         <div>
           <div class="case-id">${c.caseId} · ${c.datetime||c.date}</div>
-          <div class="case-title">${c.area} · ${locDisplay}</div>
+          <div class="case-title">${c.area} · ${locDisplay}${c.locationType ? ' <span style="font-size:11px;background:#FEF0E3;color:#C05E0A;padding:2px 8px;border-radius:20px;font-weight:600;">'+c.locationType+'</span>' : ''}</div>
           <div class="case-meta">${c.unit} · ${c.name}</div>
         </div>
         <span class="badge ${isFlagged?'flagged':c.status==='待處理'?'pending':'done'}">${isFlagged?'已標記':c.status}</span>
@@ -544,6 +557,12 @@ function renderCases() {
         <textarea id="note-${c.rowIndex}" placeholder="填寫處理情形…">${c.repairNote||''}</textarea>
       </div>
       <div class="mgr-field">
+        <div class="mgr-label">案件類型 <span class="opt-tag">選填</span></div>
+        <div class="flag-row" id="ctype-${c.rowIndex}">
+          ${['空調','機電','建物','其他'].map(f=>`<button class="flag-btn${c.caseType===f?' active-flag':''}" onclick="toggleCaseType(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
+        </div>
+      </div>
+      <div class="mgr-field">
         <div class="mgr-label">標記原因 <span class="opt-tag">選填，標記後不列入病歷表統計</span></div>
         <div class="flag-row" id="flags-${c.rowIndex}">
           ${['寫錯','重複報修','測試'].map(f=>`<button class="flag-btn${c.flagReason===f?' active-flag':''}" onclick="toggleFlag(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
@@ -559,6 +578,20 @@ function renderCases() {
   }).join('');
 
   renderPagination('mgrPagination', mgrPage, totalPages, p=>{mgrPage=p;renderCases();});
+}
+
+function toggleCaseType(rowIndex, type, btn) {
+  const btns = document.getElementById('ctype-'+rowIndex).querySelectorAll('.flag-btn');
+  const wasActive = btn.classList.contains('active-flag');
+  btns.forEach(b=>b.classList.remove('active-flag'));
+  if (!wasActive) btn.classList.add('active-flag');
+}
+
+function getSelectedCaseType(rowIndex) {
+  const el = document.getElementById('ctype-'+rowIndex);
+  if (!el) return '';
+  const active = el.querySelector('.active-flag');
+  return active ? active.textContent : '';
 }
 
 function toggleFlag(rowIndex, reason, btn) {
@@ -579,14 +612,16 @@ async function updateCase(rowIndex) {
   const note = document.getElementById('note-'+rowIndex).value;
   const norm = document.getElementById('norm-'+rowIndex).value;
   const flag = getSelectedFlag(rowIndex);
-  await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag});
+  const caseType = getSelectedCaseType(rowIndex);
+  await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType});
   showToast('✓ 已儲存'); loadCases();
 }
 async function closeCase(rowIndex) {
   const note = document.getElementById('note-'+rowIndex).value;
   const norm = document.getElementById('norm-'+rowIndex).value;
   const flag = getSelectedFlag(rowIndex);
-  await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag});
+  const caseType = getSelectedCaseType(rowIndex);
+  await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType});
   showToast('✓ 案件已結案'); loadCases();
 }
 async function reopenCase(rowIndex) {
@@ -622,7 +657,7 @@ function renderQuery() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div>
           <div class="case-id">${c.caseId} · ${c.datetime||c.date}</div>
-          <div class="pub-title">${c.area} · ${locDisplay}</div>
+          <div class="pub-title">${c.area} · ${locDisplay}${c.locationType ? ' <span style="font-size:11px;background:#FEF0E3;color:#C05E0A;padding:2px 8px;border-radius:20px;font-weight:600;">'+c.locationType+'</span>' : ''}</div>
           <div class="pub-meta">${c.unit} · ${c.name}</div>
         </div>
         <span class="badge ${isFlagged?'flagged':c.status==='待處理'?'pending':'done'}">${isFlagged?'已標記':c.status}</span>
@@ -651,6 +686,13 @@ function renderPagination(containerId, current, total, onChange) {
 }
 
 // ── 時間篩選 ──
+function setAreaDashFilter(area, btn) {
+  currentAreaDashFilter = area;
+  document.querySelectorAll('.time-filter-row:nth-child(2) .time-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
 function setTimeFilter(type, btn) {
   currentTimeFilter=type;
   document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
@@ -669,7 +711,8 @@ function parseDate(raw) {
 
 function getFilteredCases() {
   const now = new Date();
-  const valid = allCases.filter(c=>!c.flagReason);
+  let valid = allCases.filter(c=>!c.flagReason);
+  if (currentAreaDashFilter!=='all') valid = valid.filter(c=>c.area===currentAreaDashFilter);
   if (currentTimeFilter==='all') return valid;
   return valid.filter(c=>{
     const raw = c.datetime||c.date||'';
@@ -749,6 +792,18 @@ function renderDashboard() {
       </div>
     </div>`;
   }).join(''):'<div class="empty-state" style="padding:20px 0;">暫無資料</div>';
+
+  const typeColors = {'空調':'#3B82F6','機電':'#F59E0B','建物':'#10B981','其他':'#aaa'};
+  const typeCounts = {};
+  cases.forEach(c=>{ if(c.caseType) typeCounts[c.caseType]=(typeCounts[c.caseType]||0)+1; });
+  const maxT = Math.max(...Object.values(typeCounts),1);
+  document.getElementById('caseTypeChart').innerHTML = Object.keys(typeCounts).length ? 
+    Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).map(([type,count])=>`
+      <div class="bar-row">
+        <div class="bar-label">${type}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/maxT*100)}%;background:${typeColors[type]||'#aaa'};"></div></div>
+        <div class="bar-val">${count}</div>
+      </div>`).join('') : '<div class="empty-state" style="padding:20px 0;">尚未填寫案件類型</div>';
 
   document.getElementById('recentList').innerHTML=cases.slice(0,8).map(c=>`
     <div class="recent-item">
