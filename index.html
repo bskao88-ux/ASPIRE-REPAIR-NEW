@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- saved from url=(0057)file:///C:/Users/bskao/Downloads/repair_system_new_2.html -->
+<html lang="zh-TW"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>設施報修系統 · 渴望會館</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192x192.png">
+<link href="./設施報修系統 · 渴望會館_files/css2" rel="stylesheet">
+<link rel="manifest" href="file:///C:/Users/bskao/Downloads/manifest.json">
+<link rel="apple-touch-icon" href="file:///C:/Users/bskao/Downloads/icon-192x192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="渴望報修">
@@ -197,10 +195,10 @@
 <nav class="nav">
   <div class="nav-brand">🌟 渴望園區報修系統</div>
   <div class="nav-tabs">
-    <div class="nav-tab active" onclick="switchPage('form')">報修申請</div>
-    <div class="nav-tab" onclick="switchPage('query')">案件查詢</div>
-    <div class="nav-tab" onclick="requireAuth('mgr')">修繕管理</div>
-    <div class="nav-tab" onclick="requireAuth('dash')">後台統計</div>
+    <div class="nav-tab active" onclick="switchPage(&#39;form&#39;)">報修申請</div>
+    <div class="nav-tab" onclick="switchPage(&#39;query&#39;)">案件查詢</div>
+    <div class="nav-tab" onclick="requireAuth(&#39;mgr&#39;)">修繕管理</div>
+    <div class="nav-tab" onclick="requireAuth(&#39;dash&#39;)">後台統計</div>
   </div>
   <div class="logout-btn" id="logoutBtn" style="display:none" onclick="logout()">登出</div>
 </nav>
@@ -212,8 +210,7 @@
       <div class="lock-icon">🔒</div>
       <div class="lock-title">後台管理區</div>
       <div class="lock-sub">請輸入管理密碼才能進入</div>
-      <input class="lock-input" type="password" id="pwInput" placeholder="••••••" maxlength="20"
-        onkeydown="if(event.key==='Enter') checkPassword()" />
+      <input class="lock-input" type="password" id="pwInput" placeholder="••••••" maxlength="20" onkeydown="if(event.key===&#39;Enter&#39;) checkPassword()">
       <button class="lock-btn" onclick="checkPassword()">進入</button>
       <div class="lock-err" id="pwErr"></div>
     </div>
@@ -229,17 +226,17 @@
       <div class="field">
         <label>申請單位 *</label>
         <div class="loc-type-row" style="flex-wrap:wrap;" id="unit-btn-row">
-          <button class="loc-type-btn" onclick="setUnit('房務部',this)">房務部</button>
-          <button class="loc-type-btn" onclick="setUnit('客房部',this)">客房部</button>
-          <button class="loc-type-btn" onclick="setUnit('休閒中心',this)">休閒中心</button>
-          <button class="loc-type-btn" onclick="setUnit('饗渴望',this)">饗渴望</button>
-          <button class="loc-type-btn" onclick="setUnit('會議組',this)">會議組</button>
-          <button class="loc-type-btn" onclick="setUnit('其他',this)">其他</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;房務部&#39;,this)">房務部</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;客房部&#39;,this)">客房部</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;休閒中心&#39;,this)">休閒中心</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;饗渴望&#39;,this)">饗渴望</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;會議組&#39;,this)">會議組</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;其他&#39;,this)">其他</button>
         </div>
-        <input type="text" id="f-unit" placeholder="請輸入單位名稱" style="display:none;margin-top:8px;" />
+        <input type="text" id="f-unit" placeholder="請輸入單位名稱" style="display:none;margin-top:8px;">
       </div>
-      <div class="field"><label>申請人姓名 *</label><input type="text" id="f-name" placeholder="請輸入姓名" /></div>
-      <div class="field"><label>報修日期</label><input type="text" id="f-date" readonly /></div>
+      <div class="field"><label>申請人姓名 *</label><input type="text" id="f-name" placeholder="請輸入姓名"></div>
+      <div class="field"><label>報修日期</label><input type="text" id="f-date" readonly=""></div>
       <div class="divider"></div>
       <div class="section-label">報修地點</div>
       <div class="field">
@@ -256,13 +253,13 @@
       <div class="field">
         <label>位置類型 *</label>
         <div class="loc-type-row">
-          <button class="loc-type-btn" onclick="setLocType('room',this)">🚪 客房</button>
-          <button class="loc-type-btn" onclick="setLocType('restaurant',this)">🍽️ 餐廳</button>
-          <button class="loc-type-btn" onclick="setLocType('facility',this)">🏛️ 設施</button>
-          <button class="loc-type-btn" onclick="setLocType('other',this)">📍 公共區域／其他</button>
+          <button class="loc-type-btn" onclick="setLocType(&#39;room&#39;,this)">🚪 客房</button>
+          <button class="loc-type-btn" onclick="setLocType(&#39;restaurant&#39;,this)">🍽️ 餐廳</button>
+          <button class="loc-type-btn" onclick="setLocType(&#39;facility&#39;,this)">🏛️ 設施</button>
+          <button class="loc-type-btn" onclick="setLocType(&#39;other&#39;,this)">📍 公共區域／其他</button>
         </div>
         <div id="loc-input-wrap" style="display:none; margin-top:2px;">
-          <input type="text" id="f-location" placeholder="" oninput="showNormPreview()" />
+          <input type="text" id="f-location" placeholder="" oninput="showNormPreview()">
           <div class="hint" id="loc-hint"></div>
           <div id="normPreview">將儲存為：<span id="normValue"></span></div>
         </div>
@@ -281,16 +278,16 @@
 <!-- ══ 案件查詢（公開）══ -->
 <div id="page-query" class="page">
   <div class="filter-row">
-    <button class="filter-btn active" onclick="filterQuery('待處理',this)">待處理</button>
-    <button class="filter-btn" onclick="filterQuery('已結案',this)">已結案</button>
+    <button class="filter-btn active" onclick="filterQuery(&#39;待處理&#39;,this)">待處理</button>
+    <button class="filter-btn" onclick="filterQuery(&#39;已結案&#39;,this)">已結案</button>
   </div>
   <div class="filter-row" style="flex-wrap:wrap;gap:6px;" id="query-area-row">
-    <button class="filter-btn active" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('all',this)">全部</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('會館',this)">會館</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('雅舍',this)">雅舍</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('研究園',this)">研究園</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('智尊',this)">智尊</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('其他',this)">其他</button>
+    <button class="filter-btn active" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;all&#39;,this)">全部</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;會館&#39;,this)">會館</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;雅舍&#39;,this)">雅舍</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;研究園&#39;,this)">研究園</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;智尊&#39;,this)">智尊</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;其他&#39;,this)">其他</button>
   </div>
   <div id="queryList"><div class="empty-state">載入中…</div></div>
   <div id="queryPagination" class="pagination"></div>
@@ -299,16 +296,16 @@
 <!-- ══ 修繕管理 ══ -->
 <div id="page-mgr" class="page">
   <div class="filter-row">
-    <button class="filter-btn active" onclick="filterCases('待處理',this)">待處理</button>
-    <button class="filter-btn" onclick="filterCases('已結案',this)">已結案</button>
+    <button class="filter-btn active" onclick="filterCases(&#39;待處理&#39;,this)">待處理</button>
+    <button class="filter-btn" onclick="filterCases(&#39;已結案&#39;,this)">已結案</button>
   </div>
   <div class="filter-row" style="flex-wrap:wrap;gap:6px;" id="mgr-area-row">
-    <button class="filter-btn active" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('all',this)">全部</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('會館',this)">會館</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('雅舍',this)">雅舍</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('研究園',this)">研究園</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('智尊',this)">智尊</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea('其他',this)">其他</button>
+    <button class="filter-btn active" style="flex:none;padding:7px 12px;" onclick="filterMgrArea(&#39;all&#39;,this)">全部</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea(&#39;會館&#39;,this)">會館</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea(&#39;雅舍&#39;,this)">雅舍</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea(&#39;研究園&#39;,this)">研究園</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea(&#39;智尊&#39;,this)">智尊</button>
+    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterMgrArea(&#39;其他&#39;,this)">其他</button>
   </div>
   <div id="caseList"><div class="empty-state">載入中…</div></div>
   <div id="mgrPagination" class="pagination"></div>
@@ -317,24 +314,24 @@
 <!-- ══ 後台統計 ══ -->
 <div id="page-dash" class="page">
   <div class="time-filter-row">
-    <button class="time-btn active" onclick="setTimeFilter('month',this)">本月</button>
-    <button class="time-btn" onclick="setTimeFilter('3month',this)">近三個月</button>
-    <button class="time-btn" onclick="setTimeFilter('year',this)">今年</button>
-    <button class="time-btn" onclick="setTimeFilter('all',this)">全部</button>
-    <button class="time-btn" onclick="setTimeFilter('custom',this)">自訂</button>
+    <button class="time-btn active" onclick="setTimeFilter(&#39;month&#39;,this)">本月</button>
+    <button class="time-btn" onclick="setTimeFilter(&#39;3month&#39;,this)">近三個月</button>
+    <button class="time-btn" onclick="setTimeFilter(&#39;year&#39;,this)">今年</button>
+    <button class="time-btn" onclick="setTimeFilter(&#39;all&#39;,this)">全部</button>
+    <button class="time-btn" onclick="setTimeFilter(&#39;custom&#39;,this)">自訂</button>
   </div>
   <div class="time-filter-row" style="margin-bottom:10px;">
-    <button class="time-btn active" onclick="setAreaDashFilter('all',this)">全部棟別</button>
-    <button class="time-btn" onclick="setAreaDashFilter('會館',this)">會館</button>
-    <button class="time-btn" onclick="setAreaDashFilter('雅舍',this)">雅舍</button>
-    <button class="time-btn" onclick="setAreaDashFilter('研究園',this)">研究園</button>
-    <button class="time-btn" onclick="setAreaDashFilter('智尊',this)">智尊</button>
-    <button class="time-btn" onclick="setAreaDashFilter('其他',this)">其他</button>
+    <button class="time-btn active" onclick="setAreaDashFilter(&#39;all&#39;,this)">全部棟別</button>
+    <button class="time-btn" onclick="setAreaDashFilter(&#39;會館&#39;,this)">會館</button>
+    <button class="time-btn" onclick="setAreaDashFilter(&#39;雅舍&#39;,this)">雅舍</button>
+    <button class="time-btn" onclick="setAreaDashFilter(&#39;研究園&#39;,this)">研究園</button>
+    <button class="time-btn" onclick="setAreaDashFilter(&#39;智尊&#39;,this)">智尊</button>
+    <button class="time-btn" onclick="setAreaDashFilter(&#39;其他&#39;,this)">其他</button>
   </div>
   <div id="customRangeWrap" class="custom-range" style="display:none;">
-    <input type="date" id="dateFrom" onchange="renderDashboard()" />
+    <input type="date" id="dateFrom" onchange="renderDashboard()">
     <span>至</span>
-    <input type="date" id="dateTo" onchange="renderDashboard()" />
+    <input type="date" id="dateTo" onchange="renderDashboard()">
   </div>
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-num navy" id="d-total">—</div><div class="stat-label">總案件數</div></div>
@@ -365,16 +362,8 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<button id="notifyBtn" onclick="enableNotifications()" style="
-  position:fixed; bottom:24px; right:16px; z-index:100;
-  background:#E8761A; color:white; border:none; border-radius:50px;
-  padding:11px 18px; font-size:13px; font-weight:600; cursor:pointer;
-  box-shadow:0 4px 16px rgba(232,118,26,0.4); display:flex; align-items:center; gap:6px;
-  font-family:inherit;">🔔 開啟通知</button>
-<button id="notifyBtn" onclick="enableNotifications()" title="開啟推播通知"
-  style="position:fixed;bottom:24px;right:20px;z-index:100;width:52px;height:52px;border-radius:50%;background:#E8761A;color:white;border:none;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(232,118,26,0.45);display:flex;align-items:center;justify-content:center;">
-  🔔
-</button>
+
+
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbz14jOXEvXQ2XS6w_KVHPwQyFi4wOCk8Jfh4sCK2HULaV4LJwe59EpWyU8EJXktbQ/exec';
@@ -960,80 +949,20 @@ function toggleLocDetail(id) {
   arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 
-async function enableNotifications() {
-  if (!('Notification' in window)) { showToast('此瀏覽器不支援通知'); return; }
-  if (Notification.permission === 'granted') { showToast('通知已開啟！'); return; }
-  const permission = await Notification.requestPermission();
-  if (permission === 'granted') {
-    try {
-      const messaging = window._fcmMessaging;
-      const reg = window._fcmReg;
-      if (messaging && reg) {
-        const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
-        if (token) {
-          fetch(API_URL + '?action=saveToken&token=' + encodeURIComponent(token));
-          showToast('✓ 推播通知已開啟！');
-          document.getElementById('notifyBtn').style.display = 'none';
-          document.getElementById('notifyBtn').style.display = 'none';
-        }
-      }
-    } catch(e) { showToast('通知設定失敗：' + e.message); }
-  } else {
-    showToast('通知權限被拒絕，請至瀏覽器設定開啟');
-  }
-}
-
 function showToast(msg) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
 </script>
+
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyB6_AsJKdJgJz6K051dF55gsNh1KPxXJB8",
-  authDomain: "aspire-9990e.firebaseapp.com",
-  projectId: "aspire-9990e",
-  storageBucket: "aspire-9990e.firebasestorage.app",
-  messagingSenderId: "390644024179",
-  appId: "1:390644024179:web:a2a32d589f15f4b3d1fb06"
-};
-const VAPID_KEY = "BA18VDzyUIfUBjxK1gGLFKw3Zo9yAAjWLu4mM8-xUJ_8_cIH3QJ2dhnzn5wkzkDVCfkP_jbKSn-TPkH7hW668Uc";
-
-firebase.initializeApp(firebaseConfig);
-
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      const reg = await navigator.serviceWorker.register('sw.js');
-      console.log('SW registered');
-
-      const messaging = firebase.messaging();
-
-      // 把 messaging 和 reg 存起來，等使用者點擊才請求權限
-      window._fcmMessaging = messaging;
-      window._fcmReg = reg;
-
-      // 如果已經授權，直接取得 token 並隱藏按鈕
-      if (Notification.permission === 'granted') {
-        document.getElementById('notifyBtn').style.display = 'none';
-        const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
-        if (token) {
-          fetch(API_URL + '?action=saveToken&token=' + encodeURIComponent(token));
-        }
-      }
-
-      // 前景推播通知
-      messaging.onMessage(payload => {
-        const { title, body } = payload.notification;
-        showToast('🔔 ' + title + '：' + body);
-      });
-
-    } catch(e) {
-      console.log('SW error:', e);
-    }
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(e => console.log('SW error:', e));
   });
 }
 </script>
-</body>
-</html>
+
+
+</body></html>
