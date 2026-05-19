@@ -954,10 +954,49 @@ function showToast(msg) {
   setTimeout(()=>t.classList.remove('show'),2800);
 }
 </script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyB6_AsJKdJgJz6K051dF55gsNh1KPxXJB8",
+  authDomain: "aspire-9990e.firebaseapp.com",
+  projectId: "aspire-9990e",
+  storageBucket: "aspire-9990e.firebasestorage.app",
+  messagingSenderId: "390644024179",
+  appId: "1:390644024179:web:a2a32d589f15f4b3d1fb06"
+};
+const VAPID_KEY = "BA18VDzyUIfUBjxK1gGLFKw3Zo9yAAjWLu4mM8-xUJ_8_cIH3QJ2dhnzn5wkzkDVCfkP_jbKSn-TPkH7hW668Uc";
+
+firebase.initializeApp(firebaseConfig);
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(e => console.log('SW error:', e));
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js');
+      console.log('SW registered');
+
+      const messaging = firebase.messaging();
+
+      // 詢問推播通知權限
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+        if (token) {
+          // 把 token 存到 Google Sheet
+          fetch(API_URL + '?action=saveToken&token=' + encodeURIComponent(token));
+          console.log('FCM Token:', token);
+        }
+      }
+
+      // 前景推播通知
+      messaging.onMessage(payload => {
+        const { title, body } = payload.notification;
+        showToast('🔔 ' + title + '：' + body);
+      });
+
+    } catch(e) {
+      console.log('SW error:', e);
+    }
   });
 }
 </script>
