@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>設施報修系統 · 渴望會館</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192x192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -200,6 +202,7 @@
     <div class="nav-tab" onclick="requireAuth('mgr')">修繕管理</div>
     <div class="nav-tab" onclick="requireAuth('dash')">後台統計</div>
   </div>
+  <div class="logout-btn" id="notifyBtn" onclick="enableNotifications()" style="display:flex;gap:4px;align-items:center;">🔔 開啟通知</div>
   <div class="logout-btn" id="logoutBtn" style="display:none" onclick="logout()">登出</div>
 </nav>
 
@@ -948,14 +951,35 @@ function toggleLocDetail(id) {
   arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 
+async function enableNotifications() {
+  if (!('Notification' in window)) { showToast('此瀏覽器不支援通知'); return; }
+  if (Notification.permission === 'granted') { showToast('通知已開啟！'); return; }
+  const permission = await Notification.requestPermission();
+  if (permission === 'granted') {
+    try {
+      const messaging = window._fcmMessaging;
+      const reg = window._fcmReg;
+      if (messaging && reg) {
+        const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+        if (token) {
+          fetch(API_URL + '?action=saveToken&token=' + encodeURIComponent(token));
+          showToast('✓ 推播通知已開啟！');
+          document.getElementById('notifyBtn').textContent = '🔔 已開啟';
+          document.getElementById('notifyBtn').style.opacity = '0.5';
+        }
+      }
+    } catch(e) { showToast('通知設定失敗：' + e.message); }
+  } else {
+    showToast('通知權限被拒絕，請至瀏覽器設定開啟');
+  }
+}
+
 function showToast(msg) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
 </script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyB6_AsJKdJgJz6K051dF55gsNh1KPxXJB8",
@@ -977,14 +1001,15 @@ if ('serviceWorker' in navigator) {
 
       const messaging = firebase.messaging();
 
-      // 詢問推播通知權限
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
+      // 把 messaging 和 reg 存起來，等使用者點擊才請求權限
+      window._fcmMessaging = messaging;
+      window._fcmReg = reg;
+
+      // 如果已經授權，直接取得 token
+      if (Notification.permission === 'granted') {
         const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
         if (token) {
-          // 把 token 存到 Google Sheet
           fetch(API_URL + '?action=saveToken&token=' + encodeURIComponent(token));
-          console.log('FCM Token:', token);
         }
       }
 
