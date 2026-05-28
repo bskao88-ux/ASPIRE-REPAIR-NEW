@@ -252,7 +252,7 @@
       </div>
       <div class="field">
         <label>位置類型 *</label>
-        <div class="loc-type-row">
+        <div class="loc-type-row" id="loctype-btn-row">
           <button class="loc-type-btn" onclick="setLocType(&#39;room&#39;,this)">🚪 客房</button>
           <button class="loc-type-btn" onclick="setLocType(&#39;restaurant&#39;,this)">🍽️ 餐廳</button>
           <button class="loc-type-btn" onclick="setLocType(&#39;facility&#39;,this)">🏛️ 設施</button>
@@ -416,7 +416,7 @@ function setArea(area, btn) {
 
 function setLocType(type, btn) {
   locType = type;
-  document.querySelectorAll('.loc-type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#loctype-btn-row .loc-type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const wrap = document.getElementById('loc-input-wrap');
   const input = document.getElementById('f-location');
@@ -521,7 +521,10 @@ async function submitForm() {
   const area = document.getElementById('f-area').value;
   const desc = document.getElementById('f-desc').value.trim();
   if (!unit) { showToast('請選擇申請單位'); return; }
-  if (!name||!area||!desc||!locType) { showToast('請填寫所有必填欄位（*）'); return; }
+  if (!name) { showToast('請填寫申請人姓名'); return; }
+  if (!area) { showToast('請選擇區域'); return; }
+  if (!locType) { showToast('請選擇位置類型'); return; }
+  if (!desc) { showToast('請填寫故障狀況描述'); return; }
   const now = new Date();
   const datetime = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const btn = document.getElementById('submitBtn');
