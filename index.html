@@ -241,14 +241,14 @@
       <div class="section-label">報修地點</div>
       <div class="field">
         <label>區域 *</label>
-        <select id="f-area">
-          <option value="">請選擇區域</option>
-          <option value="會館">1. 會館</option>
-          <option value="雅舍">2. 雅舍</option>
-          <option value="研究園">3. 研究園</option>
-          <option value="智尊">4. 智尊</option>
-          <option value="其他">5. 其他</option>
-        </select>
+        <div class="loc-type-row" style="flex-wrap:wrap;" id="area-btn-row">
+          <button class="loc-type-btn" onclick="setArea('會館',this)">會館</button>
+          <button class="loc-type-btn" onclick="setArea('雅舍',this)">雅舍</button>
+          <button class="loc-type-btn" onclick="setArea('研究園',this)">研究園</button>
+          <button class="loc-type-btn" onclick="setArea('智尊',this)">智尊</button>
+          <button class="loc-type-btn" onclick="setArea('其他',this)">其他</button>
+        </div>
+        <input type="hidden" id="f-area" value="">
       </div>
       <div class="field">
         <label>位置類型 *</label>
@@ -408,6 +408,12 @@ function setUnit(unit, btn) {
   }
 }
 
+function setArea(area, btn) {
+  document.querySelectorAll('#area-btn-row .loc-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('f-area').value = area;
+}
+
 function setLocType(type, btn) {
   locType = type;
   document.querySelectorAll('.loc-type-btn').forEach(b => b.classList.remove('active'));
@@ -533,6 +539,7 @@ async function submitForm() {
       document.getElementById('normPreview').style.display='none';
       document.querySelectorAll('.loc-type-btn').forEach(b=>b.classList.remove('active'));
       document.getElementById('f-unit').style.display='none';
+      document.getElementById('f-area').value='';
       locType='';
     } else { showToast('錯誤：'+data.message); }
   } catch(e) { showToast('連線失敗，請檢查網路'); }
