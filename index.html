@@ -4,9 +4,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>設施報修系統 · 渴望會館</title>
-<link href="./設施報修系統 · 渴望會館_files/css2" rel="stylesheet">
-<link rel="manifest" href="file:///C:/Users/bskao/Downloads/manifest.json">
-<link rel="apple-touch-icon" href="file:///C:/Users/bskao/Downloads/icon-192x192.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192x192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="渴望報修">
@@ -542,7 +542,8 @@ async function submitForm() {
   const btn = document.getElementById('submitBtn');
   btn.disabled=true; btn.textContent='送出中…';
   try {
-    const locTypeLabel = {room:'客房',restaurant:'餐廳',facility:'設施',other:'公共區域／其他'}[locType]||'';
+    const isOfficeArea = (area === '研究園' || area === '智尊');
+    const locTypeLabel = locType==='room' ? (isOfficeArea?'辦公室':'客房') : ({restaurant:'餐廳',facility:'設施',other:'公共區域／其他'}[locType]||'');
     const location = normalizeLocation(document.getElementById('f-location').value.trim());
     const params = new URLSearchParams({ action:'submit', unit, name, datetime, area, locationType:locTypeLabel, location, description:desc });
     const res = await fetch(API_URL+'?'+params);
@@ -552,7 +553,10 @@ async function submitForm() {
       ['f-unit','f-name','f-area','f-location','f-desc'].forEach(id=>document.getElementById(id).value='');
       document.getElementById('loc-input-wrap').style.display='none';
       document.getElementById('normPreview').style.display='none';
-      document.querySelectorAll('.loc-type-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('#unit-btn-row .loc-type-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('#area-btn-row .loc-type-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('#loctype-btn-row .loc-type-btn').forEach(b=>b.classList.remove('active'));
+      document.getElementById('btn-room').textContent='🚪 客房';
       document.getElementById('f-unit').style.display='none';
       document.getElementById('f-area').value='';
       locType='';
@@ -934,7 +938,7 @@ function renderDashboard() {
     </div>`;
   }).join(''):'<div class="empty-state" style="padding:20px 0;">暫無資料</div>';
 
-  const locTypeColors = {'客房':'#E8761A','餐廳':'#3B82F6','設施':'#8B5CF6','公共區域／其他':'#aaa'};
+  const locTypeColors = {'客房':'#E8761A','辦公室':'#E8761A','餐廳':'#3B82F6','設施':'#8B5CF6','公共區域／其他':'#aaa'};
   const locTypeCounts = {};
   cases.forEach(c=>{
     const lt = c.correctedLocType || c.locationType || '';
