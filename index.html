@@ -253,7 +253,7 @@
       <div class="field">
         <label>位置類型 *</label>
         <div class="loc-type-row" id="loctype-btn-row">
-          <button class="loc-type-btn" onclick="setLocType(&#39;room&#39;,this)">🚪 客房</button>
+          <button class="loc-type-btn" id="btn-room" onclick="setLocType(&#39;room&#39;,this)">🚪 客房</button>
           <button class="loc-type-btn" onclick="setLocType(&#39;restaurant&#39;,this)">🍽️ 餐廳</button>
           <button class="loc-type-btn" onclick="setLocType(&#39;facility&#39;,this)">🏛️ 設施</button>
           <button class="loc-type-btn" onclick="setLocType(&#39;other&#39;,this)">📍 公共區域／其他</button>
@@ -412,6 +412,16 @@ function setArea(area, btn) {
   document.querySelectorAll('#area-btn-row .loc-type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('f-area').value = area;
+  const roomBtn = document.getElementById('btn-room');
+  if (area === '研究園' || area === '智尊') {
+    roomBtn.textContent = '🏢 辦公室';
+  } else {
+    roomBtn.textContent = '🚪 客房';
+  }
+  document.querySelectorAll('#loctype-btn-row .loc-type-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('loc-input-wrap').style.display = 'none';
+  document.getElementById('normPreview').style.display = 'none';
+  locType = '';
 }
 
 function setLocType(type, btn) {
@@ -424,7 +434,9 @@ function setLocType(type, btn) {
   wrap.style.display = 'block';
   document.getElementById('normPreview').style.display = 'none';
   input.value = '';
-  if (type==='room') { input.placeholder='請輸入房號，例：502'; hint.textContent='輸入數字即可，系統會自動標準化'; }
+  const area = document.getElementById('f-area').value;
+  const isOffice = (area === '研究園' || area === '智尊');
+  if (type==='room') { input.placeholder= isOffice ? '請輸入辦公室編號，例：A401、B102C' : '請輸入房號，例：502'; hint.textContent= isOffice ? '' : '輸入數字即可，系統會自動標準化'; }
   else if (type==='restaurant') { input.placeholder='例：中餐廳、咖啡廳、宴會廳…'; hint.textContent=''; }
   else if (type==='facility') { input.placeholder='例：休閒部、教室、會議室、交誼廳…'; hint.textContent=''; }
   else { input.placeholder='例：廁所、走廊、停車場、小熊廣場…'; hint.textContent=''; }
