@@ -625,7 +625,15 @@ function renderCases() {
       <div class="mgr-field">
         <div class="mgr-label">更正位置類型 <span class="opt-tag">選填</span></div>
         <div class="flag-row" id="ltype-${c.rowIndex}">
-          ${['客房','餐廳','設施','公共區域／其他'].map(f=>`<button class="flag-btn${(c.correctedLocType||c.locationType)===f?' active-flag':''}" onclick="toggleLocType(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
+          ${(()=>{
+            const isOffice = (c.area==='研究園'||c.area==='智尊');
+            return ['客房','餐廳','設施','公共區域／其他'].map(f=>{
+              const label = (f==='客房'&&isOffice)?'辦公室':f;
+              const matchVal = (f==='客房'&&isOffice)?'辦公室':f;
+              const isActive = (c.correctedLocType||c.locationType)===matchVal||(f==='客房'&&(c.correctedLocType||c.locationType)==='客房'&&!isOffice);
+              return `<button class="flag-btn${isActive?' active-flag':''}" onclick="toggleLocType(${c.rowIndex},'${matchVal}',this)">${label}</button>`;
+            }).join('');
+          })()}
         </div>
       </div>
       <div class="mgr-field">
