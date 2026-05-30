@@ -1359,14 +1359,16 @@ function exportExcel() {
 const photoData = { report: [null, null], };
 
 function triggerPhotoUpload(prefix, idx) {
-  document.getElementById(prefix + '-file-' + (prefix.startsWith('close') ? prefix.split('-')[1]+'-'+idx : idx)).click();
+  const fileId = prefix.startsWith('close') ? `close-file-${prefix.slice(6)}-${idx}` : `report-file-${idx}`;
+  document.getElementById(fileId).click();
 }
 
 async function handlePhotoUpload(prefix, idx, input) {
   const file = input.files[0];
   if (!file) return;
   const compressed = await compressImage(file, 800, 0.7);
-  const slotId = prefix.startsWith('close') ? `close-slot-${prefix.split('-')[1]}-${idx}` : `report-slot-${idx}`;
+  const rowIndex = prefix.startsWith('close') ? prefix.slice(6) : null;
+  const slotId = rowIndex ? `close-slot-${rowIndex}-${idx}` : `report-slot-${idx}`;
   const slot = document.getElementById(slotId);
   slot.innerHTML = `<img src="${compressed}"><div class="photo-del" onclick="event.stopPropagation();removePhoto('${prefix}',${idx})">×</div>`;
 
@@ -1375,7 +1377,6 @@ async function handlePhotoUpload(prefix, idx, input) {
     photoData.report[idx] = compressed;
     if (idx === 0) document.getElementById('report-slot-1').style.display = 'flex';
   } else {
-    const rowIndex = prefix.split('-')[1];
     if (!photoData[prefix]) photoData[prefix] = [null, null];
     photoData[prefix][idx] = compressed;
     if (idx === 0) document.getElementById(`close-slot-${rowIndex}-1`).style.display = 'flex';
@@ -1385,7 +1386,7 @@ async function handlePhotoUpload(prefix, idx, input) {
 
 function removePhoto(prefix, idx) {
   const isClose = prefix.startsWith('close');
-  const rowIndex = isClose ? prefix.split('-')[1] : null;
+  const rowIndex = isClose ? prefix.slice(6) : null;
   const slotId = isClose ? `close-slot-${rowIndex}-${idx}` : `report-slot-${idx}`;
   const slot = document.getElementById(slotId);
   slot.innerHTML = '<span class="photo-add">+</span>';
