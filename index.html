@@ -187,6 +187,11 @@
 
   .empty-state { text-align:center; color:#ccc; padding:40px 0; font-size:14px; }
 
+  /* ── Export Modal ── */
+  .export-range-btn { padding:9px; border:1.5px solid #e8e8e8; border-radius:9px; background:white; font-size:13px; cursor:pointer; color:#666; transition:all 0.15s; font-family:inherit; font-weight:500; width:100%; }
+  .export-range-btn.active-export { background:#1a3a5c; color:white; border-color:#1a3a5c; }
+  .export-range-btn:hover:not(.active-export) { border-color:#1a3a5c; color:#1a3a5c; }
+
   /* ── Pie Chart ── */
   .pie-wrap { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
   .pie-canvas-wrap { position:relative; flex-shrink:0; }
