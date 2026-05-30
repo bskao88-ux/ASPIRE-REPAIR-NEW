@@ -280,20 +280,41 @@
 
 <!-- ══ 案件查詢（公開）══ -->
 <div id="page-query" class="page">
-  <div class="filter-row">
-    <button class="filter-btn active" onclick="filterQuery(&#39;待處理&#39;,this)">待處理</button>
-    <button class="filter-btn" onclick="filterQuery(&#39;已結案&#39;,this)">已結案</button>
+  <!-- 姓名查詢模式 -->
+  <div id="query-name-mode">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-body" style="padding:16px;">
+        <div class="field" style="margin-bottom:10px;">
+          <label>輸入報修人姓名查詢案件</label>
+          <input type="text" id="query-name-input" placeholder="請輸入您的姓名…" onkeydown="if(event.key==='Enter')searchByName()">
+        </div>
+        <button class="btn-primary" onclick="searchByName()" style="padding:10px;">查詢</button>
+      </div>
+    </div>
+    <div id="queryList"><div class="empty-state" style="color:#ccc;">請輸入姓名後查詢</div></div>
+    <div id="queryPagination" class="pagination"></div>
   </div>
-  <div class="filter-row" style="flex-wrap:wrap;gap:6px;" id="query-area-row">
-    <button class="filter-btn active" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;all&#39;,this)">全部</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;會館&#39;,this)">會館</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;雅舍&#39;,this)">雅舍</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;研究園&#39;,this)">研究園</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;智尊&#39;,this)">智尊</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;其他&#39;,this)">其他</button>
+  <!-- GM 全覽模式（隱藏） -->
+  <div id="query-gm-mode" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-size:12px;color:#E8761A;font-weight:600;">🔓 主管檢視模式</span>
+      <button onclick="exitGmMode()" style="font-size:12px;color:#999;background:none;border:none;cursor:pointer;">退出</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="filterQuery('待處理',this)">待處理</button>
+      <button class="filter-btn" onclick="filterQuery('已結案',this)">已結案</button>
+    </div>
+    <div class="filter-row" style="flex-wrap:wrap;gap:6px;" id="query-area-row">
+      <button class="filter-btn active" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('all',this)">全部</button>
+      <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('會館',this)">會館</button>
+      <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('雅舍',this)">雅舍</button>
+      <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('研究園',this)">研究園</button>
+      <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('智尊',this)">智尊</button>
+      <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea('其他',this)">其他</button>
+    </div>
+    <div id="queryListGm"><div class="empty-state">載入中…</div></div>
+    <div id="queryPaginationGm" class="pagination"></div>
   </div>
-  <div id="queryList"><div class="empty-state">載入中…</div></div>
-  <div id="queryPagination" class="pagination"></div>
 </div>
 
 <!-- ══ 修繕管理 ══ -->
@@ -766,47 +787,90 @@ async function callApi(params) {
 }
 
 // ── 案件查詢（公開）──
+let gmMode = false;
+
+function searchByName() {
+  const input = document.getElementById('query-name-input').value.trim();
+  if (!input) { showToast('請輸入姓名'); return; }
+  if (input === 'GM123') {
+    enterGmMode();
+    return;
+  }
+  queryPage = 1;
+  renderQueryByName(input);
+}
+
+function enterGmMode() {
+  gmMode = true;
+  document.getElementById('query-name-mode').style.display = 'none';
+  document.getElementById('query-gm-mode').style.display = 'block';
+  renderQueryGm();
+}
+
+function exitGmMode() {
+  gmMode = false;
+  document.getElementById('query-name-mode').style.display = 'block';
+  document.getElementById('query-gm-mode').style.display = 'none';
+  document.getElementById('query-name-input').value = '';
+}
+
+function renderQueryByName(name) {
+  const list = document.getElementById('queryList');
+  let filtered = allCases.filter(c => c.name && c.name.trim() === name);
+  if (!filtered.length) { list.innerHTML='<div class="empty-state">查無「'+name+'」的報修記錄</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
+  const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
+  if (queryPage>totalPages) queryPage=totalPages;
+  const paged = filtered.slice((queryPage-1)*PAGE_SIZE, queryPage*PAGE_SIZE);
+  list.innerHTML = paged.map(c => renderPubCard(c)).join('');
+  renderPagination('queryPagination', queryPage, totalPages, p=>{queryPage=p;renderQueryByName(name);});
+}
+
 function filterQueryArea(area, btn) {
   currentQueryArea = area;
   queryPage = 1;
   document.querySelectorAll('#query-area-row .filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  renderQuery();
+  renderQueryGm();
 }
 
 function filterQuery(status, btn) {
   currentQueryFilter=status; queryPage=1;
-  document.querySelectorAll('#page-query .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); renderQuery();
+  document.querySelectorAll('#query-gm-mode .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderQueryGm();
 }
 
-function renderQuery() {
-  const list = document.getElementById('queryList');
+function renderQueryGm() {
+  const list = document.getElementById('queryListGm');
   let filtered = allCases;
   if (currentQueryFilter!=='all') filtered=filtered.filter(c=>c.status===currentQueryFilter);
   if (currentQueryArea!=='all') filtered=filtered.filter(c=>c.area===currentQueryArea);
-
-  if (!filtered.length) { list.innerHTML='<div class="empty-state">目前沒有案件</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
+  if (!filtered.length) { list.innerHTML='<div class="empty-state">目前沒有案件</div>'; document.getElementById('queryPaginationGm').innerHTML=''; return; }
   const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
   if (queryPage>totalPages) queryPage=totalPages;
   const paged = filtered.slice((queryPage-1)*PAGE_SIZE, queryPage*PAGE_SIZE);
-  list.innerHTML = paged.map(c => {
-    const isFlagged = !!c.flagReason;
-    const locDisplay = c.normalizedLocation||c.location||'—';
-    return `<div class="pub-card${isFlagged?' is-flagged':''}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div>
-          <div class="case-id">${c.caseId} · ${formatDatetime(c.datetime||c.date)}</div>
-          <div class="pub-title">${c.area} · ${locDisplay}${c.locationType ? ' <span style="font-size:11px;background:#FEF0E3;color:#C05E0A;padding:2px 8px;border-radius:20px;font-weight:600;">'+c.locationType+'</span>' : ''}</div>
-          <div class="pub-meta">${c.unit} · ${c.name}</div>
-        </div>
-        <span class="badge ${isFlagged?'flagged':c.status==='待處理'?'pending':'done'}">${isFlagged?'已標記':c.status}</span>
+  list.innerHTML = paged.map(c => renderPubCard(c)).join('');
+  renderPagination('queryPaginationGm', queryPage, totalPages, p=>{queryPage=p;renderQueryGm();});
+}
+
+function renderQuery() {
+  if (gmMode) renderQueryGm();
+}
+
+function renderPubCard(c) {
+  const isFlagged = !!c.flagReason;
+  const locDisplay = c.normalizedLocation||c.location||'—';
+  return `<div class="pub-card${isFlagged?' is-flagged':''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div class="case-id">${c.caseId} · ${formatDatetime(c.datetime||c.date)}</div>
+        <div class="pub-title">${c.area} · ${locDisplay}${c.locationType ? ' <span style="font-size:11px;background:#FEF0E3;color:#C05E0A;padding:2px 8px;border-radius:20px;font-weight:600;">'+c.locationType+'</span>' : ''}</div>
+        <div class="pub-meta">${c.unit} · ${c.name}</div>
       </div>
-      <div class="pub-desc">${c.description}</div>
-      ${c.repairNote?`<div class="pub-note">📋 維修記錄：${c.repairNote}</div>`:''}
-    </div>`;
-  }).join('');
-  renderPagination('queryPagination', queryPage, totalPages, p=>{queryPage=p;renderQuery();});
+      <span class="badge ${isFlagged?'flagged':c.status==='待處理'?'pending':'done'}">${isFlagged?'已標記':c.status}</span>
+    </div>
+    <div class="pub-desc">${c.description}</div>
+    ${c.repairNote?`<div class="pub-note">📋 維修記錄：${c.repairNote}</div>`:''}
+  </div>`;
 }
 
 // ── 分頁 ──
