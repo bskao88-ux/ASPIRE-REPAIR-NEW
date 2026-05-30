@@ -974,6 +974,7 @@ function renderPubCard(c) {
     </div>
     <div class="pub-desc">${c.description}</div>
     ${c.repairNote?`<div class="pub-note">📋 維修記錄：${c.repairNote}</div>`:''}
+    ${c.reportPhotos&&c.reportPhotos.length?`<div style="margin-top:8px;font-size:11px;color:#aaa;">報修照片：</div><div class="photo-preview-wrap">${c.reportPhotos.map(url=>`<img class="photo-preview-img" src="${url}" onclick="window.open('${url}')">`).join('')}</div>`:''}
   </div>`;
 }
 
