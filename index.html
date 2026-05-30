@@ -648,7 +648,10 @@ async function submitForm() {
   const area = document.getElementById('f-area').value;
   const desc = document.getElementById('f-desc').value.trim();
   if (!unit) { showToast('請選擇申請單位'); return; }
-  if (!name||!area||!desc||!locType) { showToast('請填寫所有必填欄位（*）'); return; }
+  if (!name) { showToast('請填寫申請人姓名'); return; }
+  if (!area) { showToast('請選擇區域'); return; }
+  if (!locType) { showToast('請選擇位置類型'); return; }
+  if (!desc) { showToast('請填寫故障狀況描述'); return; }
   const now = new Date();
   const datetime = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const btn = document.getElementById('submitBtn');
@@ -837,6 +840,27 @@ function getSelectedCaseType(rowIndex) {
     return otherVal ? '其他：' + otherVal : '其他';
   }
   return type;
+}
+
+function toggleCloser(rowIndex, name, btn) {
+  const btns = document.getElementById('closer-'+rowIndex).querySelectorAll('.flag-btn');
+  btns.forEach(b=>b.classList.remove('active-flag'));
+  btn.classList.add('active-flag');
+  const otherInput = document.getElementById('closer-other-'+rowIndex);
+  if (otherInput) otherInput.style.display = name==='其他' ? 'block' : 'none';
+}
+
+function getSelectedCloser(rowIndex) {
+  const el = document.getElementById('closer-'+rowIndex);
+  if (!el) return '';
+  const active = el.querySelector('.active-flag');
+  if (!active) return '';
+  const name = active.textContent;
+  if (name === '其他') {
+    const input = document.getElementById('closer-other-'+rowIndex);
+    return input ? input.value.trim() : '';
+  }
+  return name;
 }
 
 function toggleFlag(rowIndex, reason, btn) {
