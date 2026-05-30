@@ -316,6 +316,9 @@
 
 <!-- ══ 後台統計 ══ -->
 <div id="page-dash" class="page">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+    <button onclick="openExportModal()" style="padding:8px 16px;background:#1a3a5c;color:white;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">📊 下載報告</button>
+  </div>
   <div class="time-filter-row">
     <button class="time-btn active" onclick="setTimeFilter(&#39;month&#39;,this)">本月</button>
     <button class="time-btn" onclick="setTimeFilter(&#39;3month&#39;,this)">近三個月</button>
@@ -367,6 +370,49 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ══ 匯出報告 Modal ══ -->
+<div id="exportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:18px;padding:28px;width:90%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+    <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:18px;">📊 下載報告</div>
+    <div style="font-size:12px;color:#666;margin-bottom:8px;font-weight:500;">時間區間</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+      <button class="export-range-btn active-export" onclick="setExportRange('month',this)">本月</button>
+      <button class="export-range-btn" onclick="setExportRange('3month',this)">近三個月</button>
+      <button class="export-range-btn" onclick="setExportRange('all',this)">全部</button>
+      <button class="export-range-btn" onclick="setExportRange('custom',this)">自訂範圍</button>
+    </div>
+    <div id="exportCustomRange" style="display:none;margin-bottom:14px;">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="date" id="exportDateFrom" style="flex:1;padding:7px 10px;border:1.5px solid #e8e8e8;border-radius:9px;font-size:12px;outline:none;font-family:inherit;">
+        <span style="font-size:12px;color:#aaa;">至</span>
+        <input type="date" id="exportDateTo" style="flex:1;padding:7px 10px;border:1.5px solid #e8e8e8;border-radius:9px;font-size:12px;outline:none;font-family:inherit;">
+      </div>
+    </div>
+    <div style="font-size:12px;color:#666;margin-bottom:8px;font-weight:500;">包含內容</div>
+    <div style="margin-bottom:18px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#444;padding:6px 0;cursor:pointer;">
+        <input type="checkbox" checked disabled style="width:15px;height:15px;"> 統計摘要
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#444;padding:6px 0;cursor:pointer;">
+        <input type="checkbox" checked disabled style="width:15px;height:15px;"> 各區域比例
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#444;padding:6px 0;cursor:pointer;">
+        <input type="checkbox" checked disabled style="width:15px;height:15px;"> 維修類別比例
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#444;padding:6px 0;cursor:pointer;">
+        <input type="checkbox" checked disabled style="width:15px;height:15px;"> 位置病歷表 Top 10
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#444;padding:6px 0;cursor:pointer;">
+        <input type="checkbox" id="exportIncludeDetail" style="width:15px;height:15px;accent-color:#E8761A;"> 案件明細清單
+      </label>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeExportModal()" style="flex:1;padding:11px;background:#f0f0f0;color:#666;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">取消</button>
+      <button onclick="exportExcel()" id="exportBtn" style="flex:2;padding:11px;background:#1a3a5c;color:white;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">下載 Excel</button>
+    </div>
+  </div>
+</div>
 
 
 
@@ -952,6 +998,174 @@ function toggleLocDetail(id) {
   const isOpen = el.style.display !== 'none';
   el.style.display = isOpen ? 'none' : 'block';
   arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+// ── 匯出報告 ──
+let exportRange = 'month';
+
+function openExportModal() {
+  document.getElementById('exportModal').style.display = 'flex';
+}
+
+function closeExportModal() {
+  document.getElementById('exportModal').style.display = 'none';
+}
+
+function setExportRange(range, btn) {
+  exportRange = range;
+  document.querySelectorAll('.export-range-btn').forEach(b => b.classList.remove('active-export'));
+  btn.classList.add('active-export');
+  document.getElementById('exportCustomRange').style.display = range === 'custom' ? 'block' : 'none';
+}
+
+function getExportCases() {
+  const now = new Date();
+  let cases = allCases.filter(c => !c.flagReason);
+  if (exportRange === 'month') {
+    cases = cases.filter(c => {
+      const d = parseExportDate(c.datetime);
+      return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    });
+  } else if (exportRange === '3month') {
+    cases = cases.filter(c => {
+      const d = parseExportDate(c.datetime);
+      return d && (now - d) <= 90*24*60*60*1000;
+    });
+  } else if (exportRange === 'custom') {
+    const from = document.getElementById('exportDateFrom').value;
+    const to = document.getElementById('exportDateTo').value;
+    cases = cases.filter(c => {
+      const d = parseExportDate(c.datetime);
+      if (!d) return false;
+      if (from && d < new Date(from)) return false;
+      if (to && d > new Date(to + 'T23:59:59')) return false;
+      return true;
+    });
+  }
+  return cases;
+}
+
+function parseExportDate(raw) {
+  if (!raw) return null;
+  const m = String(raw).match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if (m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  const d = new Date(raw);
+  return isNaN(d) ? null : d;
+}
+
+function exportExcel() {
+  const btn = document.getElementById('exportBtn');
+  btn.textContent = '產生中…'; btn.disabled = true;
+
+  const cases = getExportCases();
+  const includeDetail = document.getElementById('exportIncludeDetail').checked;
+  const now = new Date();
+  const rangeLabel = {month:'本月', '3month':'近三個月', all:'全部', custom:'自訂'}[exportRange];
+
+  // 統計數據
+  const total = cases.length;
+  const pending = cases.filter(c => c.status === '待處理').length;
+  const done = cases.filter(c => c.status === '已結案').length;
+  const rate = total > 0 ? Math.round(done/total*100) + '%' : '—';
+
+  // 各區域
+  const areaCounts = {};
+  cases.forEach(c => { areaCounts[c.area] = (areaCounts[c.area]||0)+1; });
+
+  // 維修類別
+  const typeCounts = {};
+  cases.forEach(c => { if(c.caseType) typeCounts[c.caseType] = (typeCounts[c.caseType]||0)+1; });
+
+  // 位置病歷 Top10
+  const locMap = {};
+  cases.forEach(c => {
+    const loc = (c.normalizedLocation||c.location||'（未填位置）');
+    const key = c.area + '|' + loc;
+    if (!locMap[key]) locMap[key] = {area:c.area, loc, total:0, pending:0, done:0};
+    locMap[key].total++;
+    if (c.status==='待處理') locMap[key].pending++; else locMap[key].done++;
+  });
+  const top10 = Object.values(locMap).sort((a,b)=>b.total-a.total).slice(0,10);
+
+  // 建立 CSV 內容
+  let csv = '﻿'; // BOM for Excel UTF-8
+
+  // 工作表1：統計摘要
+  csv += '渴望園區報修系統 - 報告
+';
+  csv += `產生時間,${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}
+`;
+  csv += `時間範圍,${rangeLabel}
+
+`;
+  csv += '【統計摘要】
+';
+  csv += `總案件數,${total}
+`;
+  csv += `待處理,${pending}
+`;
+  csv += `已結案,${done}
+`;
+  csv += `結案率,${rate}
+
+`;
+
+  csv += '【各區域維修比例】
+';
+  csv += '區域,件數,比例
+';
+  Object.entries(areaCounts).sort((a,b)=>b[1]-a[1]).forEach(([area,count])=>{
+    csv += `${area},${count},${total>0?Math.round(count/total*100)+'%':'—'}
+`;
+  });
+  csv += '
+';
+
+  csv += '【維修類別比例】
+';
+  csv += '類別,件數,比例
+';
+  Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).forEach(([type,count])=>{
+    csv += `${type},${count},${total>0?Math.round(count/total*100)+'%':'—'}
+`;
+  });
+  csv += '
+';
+
+  csv += '【位置病歷表 Top 10】
+';
+  csv += '排名,區域,位置,總計,待處理,已結案
+';
+  top10.forEach((e,i)=>{
+    csv += `${i+1},${e.area},${e.loc},${e.total},${e.pending},${e.done}
+`;
+  });
+
+  if (includeDetail) {
+    csv += '
+【案件明細清單】
+';
+    csv += '案件編號,日期時間,申請單位,申請人,區域,位置類型,詳細位置,故障描述,狀態,維修記錄,案件類型,結案人
+';
+    cases.forEach(c => {
+      const row = [c.caseId, c.datetime, c.unit, c.name, c.area, c.locationType, c.location||'', c.description, c.status, c.repairNote||'', c.caseType||'', c.closerName||''];
+      csv += row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + '
+';
+    });
+  }
+
+  // 下載
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `渴望報修報告_${rangeLabel}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  btn.textContent = '下載 Excel'; btn.disabled = false;
+  closeExportModal();
+  showToast('✓ 報告已下載');
 }
 
 function showToast(msg) {
