@@ -1227,67 +1227,42 @@ function exportExcel() {
   // 建立 CSV 內容
   let csv = '﻿'; // BOM for Excel UTF-8
 
-  // 工作表1：統計摘要
-  csv += '渴望園區報修系統 - 報告
-';
-  csv += `產生時間,${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}
-`;
-  csv += `時間範圍,${rangeLabel}
+  // 統計摘要
+  csv += '渴望園區報修系統 - 報告\n';
+  csv += `產生時間,${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}\n`;
+  csv += `時間範圍,${rangeLabel}\n\n`;
+  csv += '【統計摘要】\n';
+  csv += `總案件數,${total}\n`;
+  csv += `待處理,${pending}\n`;
+  csv += `已結案,${done}\n`;
+  csv += `結案率,${rate}\n\n`;
 
-`;
-  csv += '【統計摘要】
-';
-  csv += `總案件數,${total}
-`;
-  csv += `待處理,${pending}
-`;
-  csv += `已結案,${done}
-`;
-  csv += `結案率,${rate}
-
-`;
-
-  csv += '【各區域維修比例】
-';
-  csv += '區域,件數,比例
-';
+  csv += '【各區域維修比例】\n';
+  csv += '區域,件數,比例\n';
   Object.entries(areaCounts).sort((a,b)=>b[1]-a[1]).forEach(([area,count])=>{
-    csv += `${area},${count},${total>0?Math.round(count/total*100)+'%':'—'}
-`;
+    csv += `${area},${count},${total>0?Math.round(count/total*100)+'%':'—'}\n`;
   });
-  csv += '
-';
+  csv += '\n';
 
-  csv += '【維修類別比例】
-';
-  csv += '類別,件數,比例
-';
+  csv += '【維修類別比例】\n';
+  csv += '類別,件數,比例\n';
   Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).forEach(([type,count])=>{
-    csv += `${type},${count},${total>0?Math.round(count/total*100)+'%':'—'}
-`;
+    csv += `${type},${count},${total>0?Math.round(count/total*100)+'%':'—'}\n`;
   });
-  csv += '
-';
+  csv += '\n';
 
-  csv += '【位置病歷表 Top 10】
-';
-  csv += '排名,區域,位置,總計,待處理,已結案
-';
+  csv += '【位置病歷表 Top 10】\n';
+  csv += '排名,區域,位置,總計,待處理,已結案\n';
   top10.forEach((e,i)=>{
-    csv += `${i+1},${e.area},${e.loc},${e.total},${e.pending},${e.done}
-`;
+    csv += `${i+1},${e.area},${e.loc},${e.total},${e.pending},${e.done}\n`;
   });
 
   if (includeDetail) {
-    csv += '
-【案件明細清單】
-';
-    csv += '案件編號,日期時間,申請單位,申請人,區域,位置類型,詳細位置,故障描述,狀態,維修記錄,案件類型,結案人
-';
+    csv += '\n【案件明細清單】\n';
+    csv += '案件編號,日期時間,申請單位,申請人,區域,位置類型,詳細位置,故障描述,狀態,維修記錄,案件類型,結案人\n';
     cases.forEach(c => {
       const row = [c.caseId, c.datetime, c.unit, c.name, c.area, c.locationType, c.location||'', c.description, c.status, c.repairNote||'', c.caseType||'', c.closerName||''];
-      csv += row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + '
-';
+      csv += row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + '\n';
     });
   }
 
