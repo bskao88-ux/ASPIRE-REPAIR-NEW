@@ -187,6 +187,16 @@
 
   .empty-state { text-align:center; color:#ccc; padding:40px 0; font-size:14px; }
 
+  /* ── Photo Upload ── */
+  .photo-upload-area { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  .photo-slot { width:80px; height:80px; border:1.5px dashed #e8e8e8; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; overflow:hidden; background:#faf8f5; transition:border 0.15s; flex-shrink:0; }
+  .photo-slot:hover { border-color:#E8761A; }
+  .photo-slot img { width:100%; height:100%; object-fit:cover; border-radius:9px; }
+  .photo-slot .photo-add { font-size:24px; color:#ccc; }
+  .photo-slot .photo-del { position:absolute; top:2px; right:2px; width:18px; height:18px; background:rgba(0,0,0,0.5); color:white; border-radius:50%; font-size:11px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:1; }
+  .photo-preview-wrap { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  .photo-preview-img { width:80px; height:80px; object-fit:cover; border-radius:8px; cursor:pointer; }
+
   /* ── Export Modal ── */
   .export-range-btn { padding:9px; border:1.5px solid #e8e8e8; border-radius:9px; background:white; font-size:13px; cursor:pointer; color:#666; transition:all 0.15s; font-family:inherit; font-weight:500; width:100%; }
   .export-range-btn.active-export { background:#1a3a5c; color:white; border-color:#1a3a5c; }
@@ -292,6 +302,15 @@
       <div class="field">
         <label>故障狀況描述 *</label>
         <textarea id="f-desc" placeholder="請詳細描述故障狀況…"></textarea>
+      </div>
+      <div class="field">
+        <label>報修照片 <span style="font-size:11px;color:#bbb;font-weight:400;">選填，最多 2 張</span></label>
+        <div class="photo-upload-area" id="report-photo-area">
+          <div class="photo-slot" onclick="triggerPhotoUpload('report',0)" id="report-slot-0"><span class="photo-add">+</span></div>
+          <div class="photo-slot" style="display:none;" onclick="triggerPhotoUpload('report',1)" id="report-slot-1"><span class="photo-add">+</span></div>
+        </div>
+        <input type="file" id="report-file-0" accept="image/*" style="display:none" onchange="handlePhotoUpload('report',0,this)">
+        <input type="file" id="report-file-1" accept="image/*" style="display:none" onchange="handlePhotoUpload('report',1,this)">
       </div>
       <div class="field">
         <label>結案通知 Email <span style="font-size:11px;color:#bbb;font-weight:400;">選填，結案時將自動通知</span></label>
@@ -639,12 +658,17 @@ async function submitForm() {
     const locTypeLabel = locType==='room' ? (isOfficeArea?'辦公室':'客房') : ({restaurant:'餐廳',facility:'設施',other:'公共區域／其他'}[locType]||'');
     const location = normalizeLocation(document.getElementById('f-location').value.trim());
     const email = document.getElementById('f-email').value.trim();
-    const params = new URLSearchParams({ action:'submit', unit, name, datetime, area, locationType:locTypeLabel, location, description:desc, email });
+    const reportPhotos = (photoData.report||[]).filter(Boolean);
+    const params = new URLSearchParams({ action:'submit', unit, name, datetime, area, locationType:locTypeLabel, location, description:desc, email, reportPhotos: JSON.stringify(reportPhotos) });
     const res = await fetch(API_URL+'?'+params);
     const data = await res.json();
     if (data.success) {
       showToast('✓ '+data.message);
       ['f-unit','f-name','f-area','f-location','f-desc','f-email'].forEach(id=>document.getElementById(id).value='');
+      photoData.report = [null, null];
+      document.getElementById('report-slot-0').innerHTML = '<span class="photo-add">+</span>';
+      document.getElementById('report-slot-1').innerHTML = '<span class="photo-add">+</span>';
+      document.getElementById('report-slot-1').style.display = 'none';
       document.getElementById('loc-input-wrap').style.display='none';
       document.getElementById('normPreview').style.display='none';
       document.querySelectorAll('#unit-btn-row .loc-type-btn').forEach(b=>b.classList.remove('active'));
@@ -746,6 +770,20 @@ function renderCases() {
         <textarea id="note-${c.rowIndex}" placeholder="填寫處理情形…">${c.repairNote||''}</textarea>
       </div>
       <div class="mgr-field">
+        <div class="mgr-label">結案照片 <span class="opt-tag">選填，最多 2 張</span></div>
+        <div class="photo-upload-area" id="close-photo-area-${c.rowIndex}">
+          <div class="photo-slot" onclick="triggerPhotoUpload('close-${c.rowIndex}',0)" id="close-slot-${c.rowIndex}-0">
+            ${c.closePhotos&&c.closePhotos[0]?`<img src="${c.closePhotos[0]}"><div class="photo-del" onclick="event.stopPropagation();removePhoto('close-${c.rowIndex}',0)">×</div>`:'<span class="photo-add">+</span>'}
+          </div>
+          <div class="photo-slot" id="close-slot-${c.rowIndex}-1" style="display:${c.closePhotos&&c.closePhotos[0]?'flex':'none'}">
+            ${c.closePhotos&&c.closePhotos[1]?`<img src="${c.closePhotos[1]}"><div class="photo-del" onclick="event.stopPropagation();removePhoto('close-${c.rowIndex}',1)">×</div>`:'<span class="photo-add">+</span>'}
+          </div>
+        </div>
+        <input type="file" id="close-file-${c.rowIndex}-0" accept="image/*" style="display:none" onchange="handlePhotoUpload('close-${c.rowIndex}',0,this)">
+        <input type="file" id="close-file-${c.rowIndex}-1" accept="image/*" style="display:none" onchange="handlePhotoUpload('close-${c.rowIndex}',1,this)">
+        ${c.reportPhotos&&c.reportPhotos.length?`<div style="margin-top:8px;font-size:11px;color:#aaa;">報修照片：</div><div class="photo-preview-wrap">${c.reportPhotos.map(url=>`<img class="photo-preview-img" src="${url}" onclick="window.open('${url}')">`).join('')}</div>`:''}
+      </div>
+      <div class="mgr-field">
         <div class="mgr-label">標記原因 <span class="opt-tag">選填，標記後不列入病歷表統計</span></div>
         <div class="flag-row" id="flags-${c.rowIndex}">
           ${['寫錯','重複報修','測試'].map(f=>`<button class="flag-btn${c.flagReason===f?' active-flag':''}" onclick="toggleFlag(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
@@ -821,7 +859,8 @@ async function updateCase(rowIndex) {
   if (!caseType) { showToast('請選擇案件類型'); return; }
   const correctedLocType = getSelectedLocType(rowIndex);
   const closerName = getSelectedCloser(rowIndex);
-  await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType, closerName});
+  const closePhotos = getClosePhotos(rowIndex);
+  await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType, closerName, closePhotos: JSON.stringify(closePhotos)});
   showToast('✓ 已儲存'); loadCases();
 }
 async function closeCase(rowIndex) {
@@ -833,7 +872,8 @@ async function closeCase(rowIndex) {
   const correctedLocType = getSelectedLocType(rowIndex);
   const closerName = getSelectedCloser(rowIndex);
   if (!closerName) { showToast('請選擇結案人'); return; }
-  await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType, closerName});
+  const closePhotos = getClosePhotos(rowIndex);
+  await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType, closerName, closePhotos: JSON.stringify(closePhotos)});
   showToast('✓ 案件已結案'); loadCases();
 }
 async function reopenCase(rowIndex) {
@@ -1283,6 +1323,76 @@ function exportExcel() {
   btn.textContent = '下載 Excel'; btn.disabled = false;
   closeExportModal();
   showToast('✓ 報告已下載');
+}
+
+// ── 照片上傳 ──
+const photoData = { report: [null, null], };
+
+function triggerPhotoUpload(prefix, idx) {
+  document.getElementById(prefix + '-file-' + (prefix.startsWith('close') ? prefix.split('-')[1]+'-'+idx : idx)).click();
+}
+
+async function handlePhotoUpload(prefix, idx, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const compressed = await compressImage(file, 800, 0.7);
+  const slotId = prefix.startsWith('close') ? `close-slot-${prefix.split('-')[1]}-${idx}` : `report-slot-${idx}`;
+  const slot = document.getElementById(slotId);
+  slot.innerHTML = `<img src="${compressed}"><div class="photo-del" onclick="event.stopPropagation();removePhoto('${prefix}',${idx})">×</div>`;
+
+  if (!prefix.startsWith('close')) {
+    if (!photoData.report) photoData.report = [null, null];
+    photoData.report[idx] = compressed;
+    if (idx === 0) document.getElementById('report-slot-1').style.display = 'flex';
+  } else {
+    const rowIndex = prefix.split('-')[1];
+    if (!photoData[prefix]) photoData[prefix] = [null, null];
+    photoData[prefix][idx] = compressed;
+    if (idx === 0) document.getElementById(`close-slot-${rowIndex}-1`).style.display = 'flex';
+  }
+  input.value = '';
+}
+
+function removePhoto(prefix, idx) {
+  const isClose = prefix.startsWith('close');
+  const rowIndex = isClose ? prefix.split('-')[1] : null;
+  const slotId = isClose ? `close-slot-${rowIndex}-${idx}` : `report-slot-${idx}`;
+  const slot = document.getElementById(slotId);
+  slot.innerHTML = '<span class="photo-add">+</span>';
+  if (photoData[prefix]) photoData[prefix][idx] = null;
+  if (idx === 0) {
+    if (photoData[prefix]) photoData[prefix][1] = null;
+    const slot1Id = isClose ? `close-slot-${rowIndex}-1` : 'report-slot-1';
+    const slot1 = document.getElementById(slot1Id);
+    if (slot1) { slot1.innerHTML = '<span class="photo-add">+</span>'; slot1.style.display = 'none'; }
+  }
+}
+
+function compressImage(file, maxSize, quality) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxSize || h > maxSize) {
+          if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+          else { w = Math.round(w * maxSize / h); h = maxSize; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function getClosePhotos(rowIndex) {
+  const key = 'close-' + rowIndex;
+  return photoData[key] ? photoData[key].filter(Boolean) : [];
 }
 
 function showToast(msg) {
