@@ -186,6 +186,15 @@
   .pub-note { font-size:12px; color:#aaa; margin-top:7px; font-style:italic; }
 
   .empty-state { text-align:center; color:#ccc; padding:40px 0; font-size:14px; }
+
+  /* ── Pie Chart ── */
+  .pie-wrap { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+  .pie-canvas-wrap { position:relative; flex-shrink:0; }
+  .pie-legend { flex:1; min-width:140px; }
+  .pie-legend-item { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:13px; }
+  .pie-legend-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+  .pie-legend-label { color:#444; flex:1; }
+  .pie-legend-val { color:#aaa; font-size:12px; }
   #normPreview { display:none; margin-top:5px; font-size:12px; color:#E8761A; background:#FEF0E3; border-radius:7px; padding:5px 10px; }
   .dash-filter-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
 </style>
@@ -227,10 +236,15 @@
         <label>申請單位 *</label>
         <div class="loc-type-row" style="flex-wrap:wrap;" id="unit-btn-row">
           <button class="loc-type-btn" onclick="setUnit(&#39;房務部&#39;,this)">房務部</button>
-          <button class="loc-type-btn" onclick="setUnit(&#39;客房部&#39;,this)">客房部</button>
-          <button class="loc-type-btn" onclick="setUnit(&#39;休閒中心&#39;,this)">休閒中心</button>
-          <button class="loc-type-btn" onclick="setUnit(&#39;饗渴望&#39;,this)">饗渴望</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;旅館營運&#39;,this)">旅館營運</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;健康休閒&#39;,this)">健康休閒</button>
           <button class="loc-type-btn" onclick="setUnit(&#39;會議組&#39;,this)">會議組</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;餐飲事業&#39;,this)">餐飲事業</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;行政支援&#39;,this)">行政支援</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;園區營繕&#39;,this)">園區營繕</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;雅舍櫃台&#39;,this)">雅舍櫃台</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;研究園櫃台&#39;,this)">研究園櫃台</button>
+          <button class="loc-type-btn" onclick="setUnit(&#39;智尊櫃台&#39;,this)">智尊櫃台</button>
           <button class="loc-type-btn" onclick="setUnit(&#39;其他&#39;,this)">其他</button>
         </div>
         <input type="text" id="f-unit" placeholder="請輸入單位名稱" style="display:none;margin-top:8px;">
@@ -270,6 +284,10 @@
         <label>故障狀況描述 *</label>
         <textarea id="f-desc" placeholder="請詳細描述故障狀況…"></textarea>
       </div>
+      <div class="field">
+        <label>結案通知 Email <span style="font-size:11px;color:#bbb;font-weight:400;">選填，結案時將自動通知</span></label>
+        <input type="email" id="f-email" placeholder="請輸入 Email（選填）">
+      </div>
       <button class="btn-primary" id="submitBtn" onclick="submitForm()">送出報修申請</button>
     </div>
   </div>
@@ -277,19 +295,16 @@
 
 <!-- ══ 案件查詢（公開）══ -->
 <div id="page-query" class="page">
-  <div class="filter-row">
-    <button class="filter-btn active" onclick="filterQuery(&#39;待處理&#39;,this)">待處理</button>
-    <button class="filter-btn" onclick="filterQuery(&#39;已結案&#39;,this)">已結案</button>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-body" style="padding:16px;">
+      <div class="field" style="margin-bottom:10px;">
+        <label>輸入報修人姓名查詢案件</label>
+        <input type="text" id="query-name-input" placeholder="請輸入您的姓名…" onkeydown="if(event.key==='Enter')searchByName()">
+      </div>
+      <button class="btn-primary" onclick="searchByName()" style="padding:10px;">查詢</button>
+    </div>
   </div>
-  <div class="filter-row" style="flex-wrap:wrap;gap:6px;" id="query-area-row">
-    <button class="filter-btn active" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;all&#39;,this)">全部</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;會館&#39;,this)">會館</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;雅舍&#39;,this)">雅舍</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;研究園&#39;,this)">研究園</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;智尊&#39;,this)">智尊</button>
-    <button class="filter-btn" style="flex:none;padding:7px 12px;" onclick="filterQueryArea(&#39;其他&#39;,this)">其他</button>
-  </div>
-  <div id="queryList"><div class="empty-state">載入中…</div></div>
+  <div id="queryList"><div class="empty-state" style="color:#ccc;">請輸入姓名後查詢</div></div>
   <div id="queryPagination" class="pagination"></div>
 </div>
 
@@ -340,7 +355,7 @@
     <div class="stat-card"><div class="stat-num gray" id="d-rate">—</div><div class="stat-label">結案率</div></div>
   </div>
   <div class="chart-wrap">
-    <div class="chart-title">各區域案件數</div>
+    <div class="chart-title">各區域維修比例</div>
     <div id="areaChart"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
   </div>
   <div class="chart-wrap">
@@ -352,7 +367,7 @@
     <div id="locTypeChart"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
   </div>
   <div class="chart-wrap">
-    <div class="chart-title">案件類型統計</div>
+    <div class="chart-title">維修類別比例</div>
     <div id="caseTypeChart"><div class="empty-state" style="padding:20px 0;">暫無資料</div></div>
   </div>
   <div class="chart-wrap">
@@ -545,12 +560,13 @@ async function submitForm() {
     const isOfficeArea = (area === '研究園' || area === '智尊');
     const locTypeLabel = locType==='room' ? (isOfficeArea?'辦公室':'客房') : ({restaurant:'餐廳',facility:'設施',other:'公共區域／其他'}[locType]||'');
     const location = normalizeLocation(document.getElementById('f-location').value.trim());
-    const params = new URLSearchParams({ action:'submit', unit, name, datetime, area, locationType:locTypeLabel, location, description:desc });
+    const email = document.getElementById('f-email').value.trim();
+    const params = new URLSearchParams({ action:'submit', unit, name, datetime, area, locationType:locTypeLabel, location, description:desc, email });
     const res = await fetch(API_URL+'?'+params);
     const data = await res.json();
     if (data.success) {
       showToast('✓ '+data.message);
-      ['f-unit','f-name','f-area','f-location','f-desc'].forEach(id=>document.getElementById(id).value='');
+      ['f-unit','f-name','f-area','f-location','f-desc','f-email'].forEach(id=>document.getElementById(id).value='');
       document.getElementById('loc-input-wrap').style.display='none';
       document.getElementById('normPreview').style.display='none';
       document.querySelectorAll('#unit-btn-row .loc-type-btn').forEach(b=>b.classList.remove('active'));
@@ -648,6 +664,15 @@ function renderCases() {
         <input type="text" id="norm-${c.rowIndex}" value="${c.normalizedLocation||''}" placeholder="例：3F走廊、502（統一名稱）" />
       </div>
       <div class="mgr-field">
+        <div class="mgr-label">結案人 <span style="font-size:10px;color:#e05252;background:#fdecea;padding:1px 6px;border-radius:4px;">必填</span></div>
+        <div class="flag-row" id="closer-${c.rowIndex}">
+          ${['林益程','劉奕錦','余冠魁','鄭嘉榮','高賓瞬','其他'].map(f=>`<button class="flag-btn${(c.closerName||'')===f?' active-flag':''}" onclick="toggleCloser(${c.rowIndex},'${f}',this)">${f}</button>`).join('')}
+        </div>
+        <input type="text" id="closer-other-${c.rowIndex}" placeholder="請輸入結案人姓名"
+          style="display:${c.closerName&&!['林益程','劉奕錦','余冠魁','鄭嘉榮','高賓瞬'].includes(c.closerName)&&c.closerName?'block':'none'};margin-top:6px;width:100%;padding:7px 11px;border:1.5px solid #e8e8e8;border-radius:9px;font-size:13px;font-family:inherit;outline:none;"
+          value="${c.closerName&&!['林益程','劉奕錦','余冠魁','鄭嘉榮','高賓瞬'].includes(c.closerName)?c.closerName:''}">
+      </div>
+      <div class="mgr-field">
         <div class="mgr-label">維修記錄</div>
         <textarea id="note-${c.rowIndex}" placeholder="填寫處理情形…">${c.repairNote||''}</textarea>
       </div>
@@ -705,6 +730,27 @@ function getSelectedCaseType(rowIndex) {
   return type;
 }
 
+function toggleCloser(rowIndex, name, btn) {
+  const btns = document.getElementById('closer-'+rowIndex).querySelectorAll('.flag-btn');
+  btns.forEach(b=>b.classList.remove('active-flag'));
+  btn.classList.add('active-flag');
+  const otherInput = document.getElementById('closer-other-'+rowIndex);
+  if (otherInput) otherInput.style.display = name==='其他' ? 'block' : 'none';
+}
+
+function getSelectedCloser(rowIndex) {
+  const el = document.getElementById('closer-'+rowIndex);
+  if (!el) return '';
+  const active = el.querySelector('.active-flag');
+  if (!active) return '';
+  const name = active.textContent;
+  if (name === '其他') {
+    const input = document.getElementById('closer-other-'+rowIndex);
+    return input ? input.value.trim() : '';
+  }
+  return name;
+}
+
 function toggleFlag(rowIndex, reason, btn) {
   const btns = document.getElementById('flags-'+rowIndex).querySelectorAll('.flag-btn');
   const wasActive = btn.classList.contains('active-flag');
@@ -726,7 +772,8 @@ async function updateCase(rowIndex) {
   const caseType = getSelectedCaseType(rowIndex);
   if (!caseType) { showToast('請選擇案件類型'); return; }
   const correctedLocType = getSelectedLocType(rowIndex);
-  await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType});
+  const closerName = getSelectedCloser(rowIndex);
+  await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType, closerName});
   showToast('✓ 已儲存'); loadCases();
 }
 async function closeCase(rowIndex) {
@@ -735,8 +782,10 @@ async function closeCase(rowIndex) {
   const flag = getSelectedFlag(rowIndex);
   const caseType = getSelectedCaseType(rowIndex);
   if (!caseType) { showToast('請選擇案件類型'); return; }
+  const closerName = getSelectedCloser(rowIndex);
+  if (!closerName) { showToast('請選擇結案人'); return; }
   const correctedLocType = getSelectedLocType(rowIndex);
-  await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType});
+  await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType, closerName});
   showToast('✓ 案件已結案'); loadCases();
 }
 async function reopenCase(rowIndex) {
@@ -749,27 +798,18 @@ async function callApi(params) {
 }
 
 // ── 案件查詢（公開）──
-function filterQueryArea(area, btn) {
-  currentQueryArea = area;
+function searchByName() {
+  const name = document.getElementById('query-name-input').value.trim();
+  if (!name) { showToast('請輸入姓名'); return; }
   queryPage = 1;
-  document.querySelectorAll('#query-area-row .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderQuery();
+  renderQuery(name);
 }
 
-function filterQuery(status, btn) {
-  currentQueryFilter=status; queryPage=1;
-  document.querySelectorAll('#page-query .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); renderQuery();
-}
-
-function renderQuery() {
+function renderQuery(name) {
   const list = document.getElementById('queryList');
-  let filtered = allCases;
-  if (currentQueryFilter!=='all') filtered=filtered.filter(c=>c.status===currentQueryFilter);
-  if (currentQueryArea!=='all') filtered=filtered.filter(c=>c.area===currentQueryArea);
-
-  if (!filtered.length) { list.innerHTML='<div class="empty-state">目前沒有案件</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
+  if (!name) { list.innerHTML='<div class="empty-state" style="color:#ccc;">請輸入姓名後查詢</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
+  let filtered = allCases.filter(c=>c.name&&c.name.trim()===name);
+  if (!filtered.length) { list.innerHTML='<div class="empty-state">查無「'+name+'」的報修記錄</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
   const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
   if (queryPage>totalPages) queryPage=totalPages;
   const paged = filtered.slice((queryPage-1)*PAGE_SIZE, queryPage*PAGE_SIZE);
@@ -789,7 +829,7 @@ function renderQuery() {
       ${c.repairNote?`<div class="pub-note">📋 維修記錄：${c.repairNote}</div>`:''}
     </div>`;
   }).join('');
-  renderPagination('queryPagination', queryPage, totalPages, p=>{queryPage=p;renderQuery();});
+  renderPagination('queryPagination', queryPage, totalPages, p=>{queryPage=p;renderQuery(name);});
 }
 
 // ── 分頁 ──
@@ -877,6 +917,45 @@ function getFilteredCases() {
   });
 }
 
+// ── 圓餅圖 ──
+function renderPieChart(containerId, counts, colors, total) {
+  const el = document.getElementById(containerId);
+  const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  if (!entries.length) { el.innerHTML='<div class="empty-state" style="padding:20px 0;">暫無資料</div>'; return; }
+  const sum = entries.reduce((a,b)=>a+b[1],0);
+  const size = 160;
+  const cx = size/2, cy = size/2, r = 68, innerR = 36;
+  let startAngle = -Math.PI/2;
+  let slices = '';
+  entries.forEach(([label, val]) => {
+    const angle = (val/sum)*Math.PI*2;
+    const endAngle = startAngle + angle;
+    const x1=cx+r*Math.cos(startAngle), y1=cy+r*Math.sin(startAngle);
+    const x2=cx+r*Math.cos(endAngle), y2=cy+r*Math.sin(endAngle);
+    const ix1=cx+innerR*Math.cos(startAngle), iy1=cy+innerR*Math.sin(startAngle);
+    const ix2=cx+innerR*Math.cos(endAngle), iy2=cy+innerR*Math.sin(endAngle);
+    const largeArc = angle > Math.PI ? 1 : 0;
+    const color = colors[label]||'#bbb';
+    slices += `<path d="M${ix1},${iy1} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} L${ix2},${iy2} A${innerR},${innerR} 0 ${largeArc},0 ${ix1},${iy1} Z" fill="${color}" stroke="white" stroke-width="2"/>`;
+    startAngle = endAngle;
+  });
+  const legend = entries.map(([label,val])=>`
+    <div class="pie-legend-item">
+      <div class="pie-legend-dot" style="background:${colors[label]||'#bbb'}"></div>
+      <span class="pie-legend-label">${label}</span>
+      <span class="pie-legend-val">${val}件 ${Math.round(val/sum*100)}%</span>
+    </div>`).join('');
+  el.innerHTML = `<div class="pie-wrap">
+    <div class="pie-canvas-wrap">
+      <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${slices}
+        <text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="20" font-weight="700" fill="#1a1a1a">${sum}</text>
+        <text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="10" fill="#aaa">總案件</text>
+      </svg>
+    </div>
+    <div class="pie-legend">${legend}</div>
+  </div>`;
+}
+
 // ── 後台統計 ──
 function renderDashboard() {
   const cases = getFilteredCases();
@@ -888,13 +967,7 @@ function renderDashboard() {
 
   const areaCounts={};
   cases.forEach(c=>{areaCounts[c.area]=(areaCounts[c.area]||0)+1;});
-  const maxC=Math.max(...Object.values(areaCounts),1);
-  document.getElementById('areaChart').innerHTML=Object.entries(areaCounts).sort((a,b)=>b[1]-a[1]).map(([area,count])=>`
-    <div class="bar-row">
-      <div class="bar-label">${area}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/maxC*100)}%;background:${AREA_COLORS[area]||'#aaa'};"></div></div>
-      <div class="bar-val">${count}</div>
-    </div>`).join('')||'<div class="empty-state" style="padding:20px 0;">暫無資料</div>';
+  renderPieChart('areaChart', areaCounts, AREA_COLORS, total);
 
   const areaF=currentAreaDashFilter;
   const locCases=areaF==='all'?cases:cases.filter(c=>c.area===areaF);
@@ -956,14 +1029,7 @@ function renderDashboard() {
   const typeColors = {'空調':'#3B82F6','電力':'#F59E0B','給排水':'#06B6D4','建物':'#10B981','電梯':'#8B5CF6','其他':'#aaa'};
   const typeCounts = {};
   cases.forEach(c=>{ if(c.caseType) typeCounts[c.caseType]=(typeCounts[c.caseType]||0)+1; });
-  const maxT = Math.max(...Object.values(typeCounts),1);
-  document.getElementById('caseTypeChart').innerHTML = Object.keys(typeCounts).length ? 
-    Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).map(([type,count])=>`
-      <div class="bar-row">
-        <div class="bar-label">${type}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/maxT*100)}%;background:${typeColors[type]||'#aaa'};"></div></div>
-        <div class="bar-val">${count}</div>
-      </div>`).join('') : '<div class="empty-state" style="padding:20px 0;">尚未填寫案件類型</div>';
+  renderPieChart('caseTypeChart', typeCounts, typeColors, total);
 
   document.getElementById('recentList').innerHTML=cases.slice(0,8).map(c=>`
     <div class="recent-item">
