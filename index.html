@@ -659,8 +659,10 @@ async function submitForm() {
     const location = normalizeLocation(document.getElementById('f-location').value.trim());
     const email = document.getElementById('f-email').value.trim();
     const reportPhotos = (photoData.report||[]).filter(Boolean);
-    const params = new URLSearchParams({ action:'submit', unit, name, datetime, area, locationType:locTypeLabel, location, description:desc, email, reportPhotos: JSON.stringify(reportPhotos) });
-    const res = await fetch(API_URL+'?'+params);
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action:'submit', unit, name, datetime, area, locationType:locTypeLabel, location, description:desc, email, reportPhotos })
+    });
     const data = await res.json();
     if (data.success) {
       showToast('✓ '+data.message);
@@ -881,7 +883,10 @@ async function reopenCase(rowIndex) {
   showToast('✓ 已取消結案'); loadCases();
 }
 async function callApi(params) {
-  const res = await fetch(API_URL+'?'+new URLSearchParams(params));
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  });
   return res.json();
 }
 
