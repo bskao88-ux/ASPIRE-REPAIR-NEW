@@ -1390,7 +1390,7 @@ function triggerPhotoUpload(prefix, idx) {
 async function handlePhotoUpload(prefix, idx, input) {
   const file = input.files[0];
   if (!file) return;
-  const compressed = await compressImage(file, 800, 0.7);
+  const compressed = await compressImage(file, 400, 0.5);
   const rowIndex = prefix.startsWith('close') ? prefix.slice(6) : null;
   const slotId = rowIndex ? `close-slot-${rowIndex}-${idx}` : `report-slot-${idx}`;
   const slot = document.getElementById(slotId);
