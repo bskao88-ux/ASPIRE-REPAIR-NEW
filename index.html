@@ -886,7 +886,7 @@ async function updateCase(rowIndex) {
   const correctedLocType = getSelectedLocType(rowIndex);
   const closerName = getSelectedCloser(rowIndex);
   const closePhotos = getClosePhotos(rowIndex);
-  await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType, closerName, closePhotos: JSON.stringify(closePhotos)});
+  await callApi({action:'update', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType, closerName, closePhotos});
   showToast('✓ 已儲存'); loadCases();
 }
 async function closeCase(rowIndex) {
@@ -899,7 +899,7 @@ async function closeCase(rowIndex) {
   const closerName = getSelectedCloser(rowIndex);
   if (!closerName) { showToast('請選擇結案人'); return; }
   const closePhotos = getClosePhotos(rowIndex);
-  await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType, closerName, closePhotos: JSON.stringify(closePhotos)});
+  await callApi({action:'close', rowIndex, repairNote:note, normalizedLocation:norm, flagReason:flag, caseType, correctedLocType, closerName, closePhotos});
   showToast('✓ 案件已結案'); loadCases();
 }
 async function reopenCase(rowIndex) {
