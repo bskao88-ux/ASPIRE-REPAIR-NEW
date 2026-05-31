@@ -334,6 +334,12 @@
         <button class="btn-primary" onclick="searchByName()" style="padding:10px;">查詢</button>
       </div>
     </div>
+    <div id="query-status-filter" style="display:none;margin-bottom:10px;">
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterQueryStatus('待處理',this)">待處理</button>
+        <button class="filter-btn" onclick="filterQueryStatus('已結案',this)">已結案</button>
+      </div>
+    </div>
     <div id="queryList"><div class="empty-state" style="color:#ccc;">請輸入姓名後查詢</div></div>
     <div id="queryPagination" class="pagination"></div>
   </div>
@@ -917,6 +923,9 @@ async function callApi(params) {
 // ── 案件查詢（公開）──
 let gmMode = false;
 
+let currentQueryName = '';
+let currentQueryStatusFilter = 'all';
+
 function searchByName() {
   const input = document.getElementById('query-name-input').value.trim();
   if (!input) { showToast('請輸入姓名'); return; }
@@ -924,8 +933,21 @@ function searchByName() {
     enterGmMode();
     return;
   }
+  currentQueryName = input;
+  currentQueryStatusFilter = '待處理';
+  document.querySelectorAll('#query-status-filter .filter-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#query-status-filter .filter-btn').classList.add('active');
+  document.getElementById('query-status-filter').style.display = 'block';
   queryPage = 1;
   renderQueryByName(input);
+}
+
+function filterQueryStatus(status, btn) {
+  currentQueryStatusFilter = status;
+  queryPage = 1;
+  document.querySelectorAll('#query-status-filter .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderQueryByName(currentQueryName);
 }
 
 function enterGmMode() {
@@ -945,7 +967,8 @@ function exitGmMode() {
 function renderQueryByName(name) {
   const list = document.getElementById('queryList');
   let filtered = allCases.filter(c => c.name && c.name.trim() === name);
-  if (!filtered.length) { list.innerHTML='<div class="empty-state">查無「'+name+'」的報修記錄</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
+  if (currentQueryStatusFilter !== 'all') filtered = filtered.filter(c => c.status === currentQueryStatusFilter);
+  if (!filtered.length) { list.innerHTML='<div class="empty-state">查無符合條件的記錄</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
   const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
   if (queryPage>totalPages) queryPage=totalPages;
   const paged = filtered.slice((queryPage-1)*PAGE_SIZE, queryPage*PAGE_SIZE);
@@ -999,6 +1022,7 @@ function renderPubCard(c) {
     <div class="pub-desc">${c.description}</div>
     ${c.repairNote?`<div class="pub-note">📋 維修記錄：${c.repairNote}</div>`:''}
     ${c.reportPhotos&&c.reportPhotos.length?`<div style="margin-top:8px;font-size:11px;color:#aaa;">報修照片：</div><div class="photo-preview-wrap">${c.reportPhotos.map(url=>`<img class="photo-preview-img" src="${url}" onclick="window.open('${url}')">`).join('')}</div>`:''}
+    ${c.closePhotos&&c.closePhotos.length?`<div style="margin-top:8px;font-size:11px;color:#aaa;">結案照片：</div><div class="photo-preview-wrap">${c.closePhotos.map(url=>`<img class="photo-preview-img" src="${url}" onclick="window.open('${url}')">`).join('')}</div>`:''}
   </div>`;
 }
 
