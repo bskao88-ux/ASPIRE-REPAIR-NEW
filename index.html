@@ -976,7 +976,7 @@ function exitGmMode() {
 
 function renderQueryByName(name) {
   const list = document.getElementById('queryList');
-  let filtered = allCases.filter(c => c.name && c.name.trim() === name);
+  let filtered = allCases.filter(c => c.name && String(c.name).trim() === name);
   if (currentQueryStatusFilter !== 'all') filtered = filtered.filter(c => c.status === currentQueryStatusFilter);
   if (!filtered.length) { list.innerHTML='<div class="empty-state">查無符合條件的記錄</div>'; document.getElementById('queryPagination').innerHTML=''; return; }
   const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
