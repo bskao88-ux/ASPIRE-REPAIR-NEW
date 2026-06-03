@@ -4,9 +4,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>設施報修系統 · 渴望會館</title>
-<link href="./設施報修系統 · 渴望會館_files/css2" rel="stylesheet">
-<link rel="manifest" href="file:///C:/Users/bskao/Downloads/manifest.json">
-<link rel="apple-touch-icon" href="file:///C:/Users/bskao/Downloads/icon-192x192.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192x192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="渴望報修">
@@ -307,7 +307,7 @@
         <label>報修照片 <span style="font-size:11px;color:#bbb;font-weight:400;">選填，最多 2 張</span></label>
         <div class="photo-upload-area" id="report-photo-area">
           <div class="photo-slot" onclick="triggerPhotoUpload('report',0)" id="report-slot-0"><span class="photo-add">+</span></div>
-          <div class="photo-slot" style="display:none;" onclick="triggerPhotoUpload('report',1)" id="report-slot-1"><span class="photo-add">+</span></div>
+          <div class="photo-slot" onclick="triggerPhotoUpload('report',1)" id="report-slot-1"><span class="photo-add">+</span></div>
         </div>
         <input type="file" id="report-file-0" accept="image/*" style="display:none" onchange="handlePhotoUpload('report',0,this)">
         <input type="file" id="report-file-1" accept="image/*" style="display:none" onchange="handlePhotoUpload('report',1,this)">
@@ -679,7 +679,6 @@ async function submitForm() {
       photoData.report = [null, null];
       document.getElementById('report-slot-0').innerHTML = '<span class="photo-add">+</span>';
       document.getElementById('report-slot-1').innerHTML = '<span class="photo-add">+</span>';
-      document.getElementById('report-slot-1').style.display = 'none';
       document.getElementById('loc-input-wrap').style.display='none';
       document.getElementById('normPreview').style.display='none';
       document.querySelectorAll('#unit-btn-row .loc-type-btn').forEach(b=>b.classList.remove('active'));
@@ -796,7 +795,7 @@ function renderCases() {
           <div class="photo-slot" onclick="triggerPhotoUpload('close-${c.rowIndex}',0)" id="close-slot-${c.rowIndex}-0">
             ${c.closePhotos&&c.closePhotos[0]?`<img src="${c.closePhotos[0]}"><div class="photo-del" onclick="event.stopPropagation();removePhoto('close-${c.rowIndex}',0)">×</div>`:'<span class="photo-add">+</span>'}
           </div>
-          <div class="photo-slot" id="close-slot-${c.rowIndex}-1" style="display:${c.closePhotos&&c.closePhotos[0]?'flex':'none'}">
+          <div class="photo-slot" onclick="triggerPhotoUpload('close-${c.rowIndex}',1)" id="close-slot-${c.rowIndex}-1">
             ${c.closePhotos&&c.closePhotos[1]?`<img src="${c.closePhotos[1]}"><div class="photo-del" onclick="event.stopPropagation();removePhoto('close-${c.rowIndex}',1)">×</div>`:'<span class="photo-add">+</span>'}
           </div>
         </div>
@@ -1409,11 +1408,11 @@ async function handlePhotoUpload(prefix, idx, input) {
   if (!prefix.startsWith('close')) {
     if (!photoData.report) photoData.report = [null, null];
     photoData.report[idx] = compressed;
-    if (idx === 0) document.getElementById('report-slot-1').style.display = 'flex';
+    // report-slot-1 預設已顯示
   } else {
     if (!photoData[prefix]) photoData[prefix] = [null, null];
     photoData[prefix][idx] = compressed;
-    if (idx === 0) document.getElementById(`close-slot-${rowIndex}-1`).style.display = 'flex';
+    // close-slot 預設已顯示
   }
   input.value = '';
 }
@@ -1429,7 +1428,7 @@ function removePhoto(prefix, idx) {
     if (photoData[prefix]) photoData[prefix][1] = null;
     const slot1Id = isClose ? `close-slot-${rowIndex}-1` : 'report-slot-1';
     const slot1 = document.getElementById(slot1Id);
-    if (slot1) { slot1.innerHTML = '<span class="photo-add">+</span>'; slot1.style.display = 'none'; }
+    if (slot1) { slot1.innerHTML = '<span class="photo-add">+</span>'; }
   }
 }
 
