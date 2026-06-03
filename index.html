@@ -935,13 +935,14 @@ let gmMode = false;
 let currentQueryName = '';
 let currentQueryStatusFilter = 'all';
 
-function searchByName() {
+async function searchByName() {
   const input = document.getElementById('query-name-input').value.trim();
   if (!input) { showToast('請輸入姓名'); return; }
   if (input === 'GM123') {
     enterGmMode();
     return;
   }
+  if (!allCases.length) await loadCases();
   currentQueryName = input;
   currentQueryStatusFilter = '待處理';
   document.querySelectorAll('#query-status-filter .filter-btn').forEach(b=>b.classList.remove('active'));
