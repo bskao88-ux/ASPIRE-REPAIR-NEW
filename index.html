@@ -488,7 +488,7 @@
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbz14jOXEvXQ2XS6w_KVHPwQyFi4wOCk8Jfh4sCK2HULaV4LJwe59EpWyU8EJXktbQ/exec';
-const ADMIN_PASSWORD = 'kao123';
+// 密碼驗證已移至後端
 const PAGE_SIZE = 20;
 
 let allCases = [];
@@ -631,7 +631,7 @@ function checkPassword() {
   }
 }
 function logout() {
-  sessionStorage.removeItem('adminAuth');
+  sessionStorage.removeItem('adminToken');
   document.getElementById('logoutBtn').style.display='none';
   switchPage('form'); showToast('已登出後台');
 }
@@ -922,9 +922,10 @@ async function reopenCase(rowIndex) {
   showToast('✓ 已取消結案'); loadCases();
 }
 async function callApi(params) {
+  const token = sessionStorage.getItem('adminToken');
   const res = await fetch(API_URL, {
     method: 'POST',
-    body: JSON.stringify(params)
+    body: JSON.stringify({ ...params, token })
   });
   return res.json();
 }
